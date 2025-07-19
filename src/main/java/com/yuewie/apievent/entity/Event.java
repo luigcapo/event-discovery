@@ -34,7 +34,7 @@ public class Event {
     @Column(name = "end_date", nullable = false)
     private LocalDateTime end;
 
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
             name = "lien_adresse_event",
             joinColumns = @JoinColumn(name = "event_id"),

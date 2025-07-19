@@ -125,6 +125,7 @@ public class EventServiceImpl implements EventService {
         eventRepository.deleteById(eventId);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public EventDto getEvent(Long id) {
         return eventRepository.findById(id).map(eventMapper::toDto).orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + id));

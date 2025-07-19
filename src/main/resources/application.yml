@@ -20,11 +20,29 @@ spring:
       - classpath:db/migration/new
     user: postgres
     password: monchichi
+  application:
+    name: api-event
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0 # 100% des requêtes sont échantillonnées
+  # Configuration unifiée et moderne pour OTLP
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
 logging:
     level:
-        org.hibernate.SQL: DEBUG
+        org.hibernate.SQL: INFO
         org.hibernate.type.descriptor.sql.BasicBinder: ERROR
         org.hibernate.type.descriptor.sql.BasicExtractor: ERROR
+        org.springdoc: INFO
+        level.io.opentelemetry.exporter.otlp: INFO
 api:
   error:
-    include-debug-message:true
+    include-debug-message: true
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

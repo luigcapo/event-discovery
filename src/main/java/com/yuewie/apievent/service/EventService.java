@@ -2,12 +2,9 @@ package com.yuewie.apievent.service;
 
 import com.yuewie.apievent.dto.EventDto;
 import com.yuewie.apievent.dto.EventSearchCriteria;
-import com.yuewie.apievent.entity.Adresse;
-import com.yuewie.apievent.entity.Event;
+import com.yuewie.apievent.aop.log.Loggable;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 
 public interface EventService {
     List<EventDto> findAllEvent();
@@ -16,8 +13,12 @@ public interface EventService {
     List<EventDto> searchEventUsingSpecification(EventSearchCriteria eventSearchCriteria);
     List<EventDto> searchEventUsingNativeSql(EventSearchCriteria eventSearchCriteria);
     List<EventDto> searchEventUsingQueryDSL(EventSearchCriteria eventSearchCriteria);
+
+
     EventDto createEvent(EventDto eventDto);
+
     EventDto updateEvent(Long eventId, EventDto eventDto);
+
     void deleteEvent(Long eventId);
 
     EventDto getEvent(Long id);

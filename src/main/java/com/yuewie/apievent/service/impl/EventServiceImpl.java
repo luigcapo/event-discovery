@@ -8,6 +8,7 @@ import com.yuewie.apievent.mapper.EventMapper;
 import com.yuewie.apievent.repository.*;
 import com.yuewie.apievent.repository.impl.EventSpecifications;
 import com.yuewie.apievent.service.EventService;
+import com.yuewie.apievent.aop.log.Loggable;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,11 +22,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@Loggable
 @Transactional
 public class EventServiceImpl implements EventService {
 
@@ -51,12 +52,14 @@ public class EventServiceImpl implements EventService {
     }
 
     @Transactional(readOnly = true)
+    @Loggable(logParams = true)
     @Override
     public List<EventDto> findAllEvent() {
         return eventRepository.findAll().stream().map(eventMapper::toDto).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
+    @Loggable(logParams = true)
     @Override
     public List<EventDto> searchEventUsingJpql(EventSearchCriteria eventSearchCriteria) {
 
@@ -64,6 +67,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Transactional(readOnly = true)
+    @Loggable(logParams = true)
     @Override
     public List<EventDto> searchEventUsingCriteria(EventSearchCriteria eventSearchCriteria) {
         return eventCriteriaApiRepository.findAllCriteaApi(eventSearchCriteria).stream().map(eventMapper::toDto).collect(Collectors.toList());

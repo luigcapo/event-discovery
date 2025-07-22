@@ -3,6 +3,7 @@ package com.yuewie.apievent.dto;
 import com.yuewie.apievent.dto.constraint.EventFieldForOrderBy;
 import com.yuewie.apievent.dto.constraint.OrderDirection;
 import com.yuewie.apievent.entity.Adresse;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
@@ -21,6 +22,7 @@ public class EventSearchCriteria {
             regexp = "^\\d{4}-\\d{2}-\\d{2}$",
             message = "startDate doit respecter le format yyyy‑MM‑dd"
     )
+    @Schema(example = "2025-07-07", description = "Format: yyyy-MM-dd")
     private String startDate;
 
     @Pattern(
@@ -33,6 +35,7 @@ public class EventSearchCriteria {
             regexp = "^\\d{4}-\\d{2}-\\d{2}$",
             message = "endDate doit respecter le format yyyy‑MM‑dd"
     )
+    @Schema(example = "2025-07-08", description = "Format: yyyy-MM-dd")
     private String endDate;
 
     @Pattern(
@@ -45,7 +48,7 @@ public class EventSearchCriteria {
 
     private OrderDirection orderDirection = OrderDirection.ASC;
 
-    private int pageNumber = 0;
+    private int pageNumber = 1;
 
     private int pageSize = 10;
 }

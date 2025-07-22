@@ -7,9 +7,11 @@ import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -72,8 +74,18 @@ public class RestControllerExceptionHandler {
         return new ResponseEntity<>(apiError, apiError.getStatus());
     }
 
-
-
-
+    /**
+     * Pour les erreurs de parsing d'enum ou type dans le requestBody.(avant la creation validation dto)
+     * Uniquement body/JSON (pas le cas pour les  query paramètres de requête).
+     *
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleEnumParseError(HttpMessageNotReadableException ex) {
+        ApiError apiError = new ApiError(
+                HttpStatus.BAD_REQUEST,
+                ex.getLocalizedMessage()
+        );
+        return new ResponseEntity<>(apiError, apiError.getStatus());
+    }
 
 }

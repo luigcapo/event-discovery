@@ -1,9 +1,7 @@
 package com.yuewie.apievent.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.yuewie.apievent.dto.AdresseDto;
-import com.yuewie.apievent.dto.EventDto;
-import com.yuewie.apievent.dto.EventSearchCriteria;
+import com.yuewie.apievent.dto.*;
 import com.yuewie.apievent.service.EventService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -39,13 +37,24 @@ class EventControllerTest {
 
     private EventDto eventDto;
 
+    private EventCreateDto eventCreateDto;
+
     private AdresseDto adresseDto;
+
+    private AdresseRequestDto adresseRequestDto;
 
     @BeforeEach
     void setUp() {
 
         adresseDto = AdresseDto.builder()
                 .id(1L)
+                .intituleAdresse("3 rue du marglier")
+                .codePostal("75000")
+                .ville("Paris")
+                .pays("France")
+                .build();
+
+        adresseRequestDto = AdresseRequestDto.builder()
                 .intituleAdresse("3 rue du marglier")
                 .codePostal("75000")
                 .ville("Paris")
@@ -59,6 +68,14 @@ class EventControllerTest {
         eventDto.setStart(LocalDateTime.of(2025, 12, 1, 20, 0));
         eventDto.setEnd(LocalDateTime.of(2025, 12, 2, 20, 0));
         eventDto.setAdresses(Set.of(adresseDto));
+
+        eventCreateDto = new EventCreateDto();
+        eventCreateDto.setName("Concert");
+        eventCreateDto.setDescription("A live concert");
+        eventCreateDto.setStart(LocalDateTime.of(2025, 12, 1, 20, 0));
+        eventCreateDto.setEnd(LocalDateTime.of(2025, 12, 2, 20, 0));
+        eventCreateDto.setAdresses(Set.of(adresseRequestDto));
+
 
 
     }
@@ -108,39 +125,38 @@ class EventControllerTest {
         @Test
         @DisplayName("Devrait créer un nouvel événement")
         void shouldCreateEvent_whenCreateEvent() throws Exception {
-            eventDto.setId(null);
             EventDto savedEventDto = new EventDto();
             savedEventDto.setId(1L); // Simule l'ID généré par la base de données
-            savedEventDto.setName(eventDto.getName());
-            savedEventDto.setDescription(eventDto.getDescription());
+            savedEventDto.setName(eventCreateDto.getName());
+            savedEventDto.setDescription(eventCreateDto.getDescription());
             savedEventDto.setStart(LocalDateTime.of(2025, 12, 1, 20, 0));
             savedEventDto.setEnd(LocalDateTime.of(2025, 12, 2, 20, 0));
             savedEventDto.setAdresses(Set.of(adresseDto));
             // Given
-            when(eventService.createEvent(eventDto)).thenReturn(savedEventDto);
+            when(eventService.createEvent(eventCreateDto)).thenReturn(savedEventDto);
 
             // When & Then
             mockMvc.perform(post("/api/v1/events")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(eventDto)))
+                            .content(objectMapper.writeValueAsString(eventCreateDto)))
                     .andExpect(status().isCreated())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.id").value(savedEventDto.getId()))
                     .andExpect(jsonPath("$.name").value(eventDto.getName()));
 
-            verify(eventService).createEvent(eventDto);
+            verify(eventService).createEvent(eventCreateDto);
         }
 
         @Test
         @DisplayName("Devrait retourner 400 Bad Request lors de lma création pour des données invalides")
         void shouldReturnBadRequest_whenCreateEventWithInvalidData() throws Exception {
             // Given
-            eventDto.setName(""); // Invalid name
+            eventCreateDto.setName(""); // Invalid name
 
             // When & Then
             mockMvc.perform(post("/api/v1/events")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(eventDto)))
+                            .content(objectMapper.writeValueAsString(eventCreateDto)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.name()))
                     .andExpect(jsonPath("$.message").value("Validation échouée"));

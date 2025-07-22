@@ -1,7 +1,6 @@
 package com.yuewie.apievent.controller;
 
-import com.yuewie.apievent.dto.EventDto;
-import com.yuewie.apievent.dto.EventSearchCriteria;
+import com.yuewie.apievent.dto.*;
 import com.yuewie.apievent.exception.ApiError;
 import com.yuewie.apievent.service.EventService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -138,7 +137,7 @@ public class EventController {
     })
     public ResponseEntity<EventDto> createEvent(
             @Parameter(description = "Données de l'événement à créer", required = true)
-            @RequestBody @Valid EventDto dto) {
+            @RequestBody @Valid EventCreateDto dto) {
         EventDto created = eventService.createEvent(dto);
         URI location = URI.create("/api/events/" + created.getId());
         return ResponseEntity
@@ -161,10 +160,32 @@ public class EventController {
                     schema = @Schema(type = "integer", format = "int64", minimum = "1"))
             @PathVariable @Min(1) Long id,
             @Parameter(description = "Données mises à jour de l'événement", required = true)
-            @RequestBody @Valid EventDto dto) {
+            @RequestBody @Valid EventUpdateDto dto) {
         EventDto updated = eventService.updateEvent(id, dto);
         return ResponseEntity.ok(updated);
     }
+
+    /** PATCH /api/events/{id} */
+    @PatchMapping("/{id}")
+    @Operation(summary = "Mettre à jour un événement existant de manière partielle",
+            description = "Met à jour un événement existant en fonction de l'ID et des données fournies. " +
+                    "Seuls les champs non nuls du DTO seront mis à jour.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Événement mis à jour avec succès", content = @Content(schema = @Schema(implementation = EventDto.class))),
+            @ApiResponse(responseCode = "404", description = "Événement non trouvé pour l'ID fourni", content = @Content(schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "400", description = "Données invalides fournies pour la mise à jour", content = @Content(schema = @Schema(implementation = ApiError.class))),
+    })
+    public ResponseEntity<EventDto> patchEvent(
+            @Parameter(description = "ID de l'événement à mettre à jour", required = true, example = "1",
+                    schema = @Schema(type = "integer", format = "int64", minimum = "1"))
+            @PathVariable @Min(1) Long id,
+            @Parameter(description = "Données mises à jour de l'événement", required = true)
+            @RequestBody @Valid EventPatchDto dto) {
+        EventDto updated = eventService.patchEvent(id, dto);
+        return ResponseEntity.ok(updated);
+    }
+
+
 
     /* ---------- DELETE ---------- */
 

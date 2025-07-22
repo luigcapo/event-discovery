@@ -30,51 +30,48 @@ public class EventSqlNativeRepositoryImpl implements EventSqlNativeRepository {
 
     @Override
     public List<Event> findAllNativeSQL(EventSearchCriteria eventSearchCriteria) {
-        StringBuilder sql = new StringBuilder("Select DISTINCT e.* FROM event e");
+        StringBuilder sql = new StringBuilder("Select DISTINCT e.* FROM event e ");
         StringBuilder whereClause = new StringBuilder("WHERE 1=1");
         List<Object> params = new ArrayList<Object>();
-        int paramIndex = 1; // Les paramètres positionnels en SQL natif commencent à 1
         // Jointure si des critères sur l'adresse sont présents ou si on trie par un champ d'adresse
         boolean joinAdresse = (eventSearchCriteria.getVille() != null && !eventSearchCriteria.getVille().isBlank()) ||
                 (eventSearchCriteria.getCodePostal() != null && !eventSearchCriteria.getCodePostal().isBlank()) ||
                 (eventSearchCriteria.getIntituleAdresse() != null && !eventSearchCriteria.getIntituleAdresse().isBlank());
         if (joinAdresse) {
-            sql.append(" JOIN lien_adresse_event l ON l.event_id = e.id JOIN adresse a ON l.adresse_id = a.id");
+            sql.append(" JOIN lien_adresse_event l ON l.event_id = e.id JOIN adresse a ON l.adresse_id = a.id ");
         }
 
         if (eventSearchCriteria.getName() != null && !eventSearchCriteria.getName().isBlank()) {
-            whereClause.append(" AND LOWER(e.name) LIKE LOWER(?)");
+            whereClause.append(" AND LOWER(e.name) LIKE LOWER(?) ");
             params.add("%" + eventSearchCriteria.getName() + "%");
         }
 
         if (eventSearchCriteria.getVille() != null && !eventSearchCriteria.getVille().isBlank()) {
             if (!joinAdresse) {
-                whereClause.append(" AND LOWER(a.ville) LIKE LOWER(?)");
+                whereClause.append(" AND LOWER(a.ville) LIKE LOWER(?) ");
                 params.add("%" + eventSearchCriteria.getVille() + "%");
             }
         }
 
         if (eventSearchCriteria.getCodePostal() != null && !eventSearchCriteria.getCodePostal().isBlank()) {
-            if (!joinAdresse) { sql.append(" JOIN adresse a ON e.adresse_id = a.id"); joinAdresse = true;}
-            whereClause.append(" AND LOWER(a.code_postal) = LOWER(?)");
+            whereClause.append(" AND LOWER(a.code_postal) = LOWER(?) ");
             params.add(eventSearchCriteria.getCodePostal());
         }
 
         if (eventSearchCriteria.getIntituleAdresse() != null && !eventSearchCriteria.getIntituleAdresse().isBlank()) {
-            if (!joinAdresse) { sql.append(" JOIN adresse a ON e.adresse_id = a.id"); joinAdresse = true;}
-            whereClause.append(" AND LOWER(a.intitule_adresse) LIKE LOWER(?)");
+            whereClause.append(" AND LOWER(a.intitule_adresse) LIKE LOWER(?) ");
             params.add("%" + eventSearchCriteria.getIntituleAdresse() + "%");
         }
 
         if (eventSearchCriteria.getStartDate() != null && !eventSearchCriteria.getStartDate().isBlank()) {
             LocalDateTime startDateTime = DateUtils.convert(eventSearchCriteria.getStartDate(), eventSearchCriteria.getStartTime());
-            whereClause.append(" AND e.start_date >= ?").append(paramIndex++);
+            whereClause.append(" AND e.start_date >= ? ");
             params.add(startDateTime);//JDBC SAIT CONVERTIT localdatetime en string
         }
 
         if (eventSearchCriteria.getEndDate() != null && !eventSearchCriteria.getEndDate().isBlank()) {
             LocalDateTime endDateTime = DateUtils.convert(eventSearchCriteria.getEndDate(), eventSearchCriteria.getEndTime());
-            whereClause.append(" AND e.end_date <= ?").append(paramIndex++);
+            whereClause.append(" AND e.end_date <= ? ");
             params.add(endDateTime);
         }
 
@@ -96,12 +93,14 @@ public class EventSqlNativeRepositoryImpl implements EventSqlNativeRepository {
             }
         }
 
-        // Création de la requête native.
-        Query query = em.createNativeQuery(sql.toString(), Event.class);
-
-        sql.append(" LIMIT ? OFFSET ?");
+        sql.append(" LIMIT ? OFFSET ? " +
+                "");
         params.add(eventSearchCriteria.getPageSize());
         params.add((eventSearchCriteria.getPageNumber() - 1) * eventSearchCriteria.getPageSize());
+
+
+        // Création de la requête native.
+        Query query = em.createNativeQuery(sql.toString(), Event.class);
 
         for (int i = 0; i < params.size(); i++) {
             query.setParameter(i + 1, params.get(i)); // Les paramètres sont 1-indexed (alors que la plupart des objet tab sont 0indexed)
@@ -135,6 +134,8 @@ public class EventSqlNativeRepositoryImpl implements EventSqlNativeRepository {
         }
         String field = orderByFieldFromCriteria.toLowerCase();
         switch (field) {
+            case "id":
+                return "e.id";
             case "name":
                 return "e.name";
             case "start": // Supposons que le critère de tri 'start' correspond à 'start_datetime'

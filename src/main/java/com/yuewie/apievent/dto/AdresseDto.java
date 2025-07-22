@@ -12,16 +12,8 @@ import java.util.Set;
 @Builder
 public class AdresseDto {
     private Long id;
-
-    @NonNull
     private String intituleAdresse;
-
-    @NonNull
     private String codePostal;
-
-    @NonNull
     private String ville;
-
-    @NonNull
     private String pays;
 }

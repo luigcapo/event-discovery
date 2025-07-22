@@ -1,8 +1,6 @@
 package com.yuewie.apievent.service;
 
-import com.yuewie.apievent.dto.AdresseDto;
-import com.yuewie.apievent.dto.EventDto;
-import com.yuewie.apievent.dto.EventSearchCriteria;
+import com.yuewie.apievent.dto.*;
 import com.yuewie.apievent.dto.constraint.EventFieldForOrderBy;
 import com.yuewie.apievent.dto.constraint.OrderDirection;
 import com.yuewie.apievent.entity.Adresse;
@@ -54,6 +52,7 @@ class EventServiceTest {
     private EventServiceImpl eventService;
 
     private EventDto eventDto;
+    private EventCreateDto eventCreateDto;
     private Event event;
     private EventSearchCriteria searchCriteria;
 
@@ -68,6 +67,13 @@ class EventServiceTest {
                 .pays("France")
                 .build();
 
+        AdresseRequestDto adresseRequestDto = AdresseRequestDto.builder()
+                .intituleAdresse("3 rue du marglier")
+                .codePostal("75000")
+                .ville("Paris")
+                .pays("France")
+                .build();
+
         eventDto = new EventDto();
         eventDto.setId(1L);
         eventDto.setName("Concert");
@@ -75,6 +81,13 @@ class EventServiceTest {
         eventDto.setStart(LocalDateTime.of(2025, 12, 1, 20, 0));
         eventDto.setDescription("Concert");
         eventDto.setAdresses(Set.of(adresseDto));
+
+        eventCreateDto = new EventCreateDto();
+        eventCreateDto.setName("Concert");
+        eventCreateDto.setEnd(LocalDateTime.of(2025, 12, 2, 20, 0));
+        eventCreateDto.setStart(LocalDateTime.of(2025, 12, 1, 20, 0));
+        eventCreateDto.setDescription("Concert");
+        eventCreateDto.setAdresses(Set.of(adresseRequestDto));
 
         Adresse adresse = new Adresse();
         adresse.setId(1L);
@@ -91,7 +104,7 @@ class EventServiceTest {
         event.setDescription("Concert");
         event.setAdresses(Set.of(adresse));
 
-        lenient().when(eventMapper.toEntity(eventDto)).thenReturn(event);
+        lenient().when(eventMapper.toEntity(eventCreateDto)).thenReturn(event);
         lenient().when(eventMapper.toDto(event)).thenReturn(eventDto);
 
         searchCriteria = new EventSearchCriteria();
@@ -119,13 +132,13 @@ class EventServiceTest {
 
 
         // When
-        EventDto createdEvent = eventService.createEvent(eventDto);
+        EventDto createdEvent = eventService.createEvent(eventCreateDto);
 
         // Then
         assertThat(createdEvent)
                 .isNotNull()
                 .isEqualTo(eventDto);
-        verify(eventMapper).toEntity(eventDto);
+        verify(eventMapper).toEntity(eventCreateDto);
         verify(eventRepository).save(event);
         verify(eventMapper).toDto(event);
     }

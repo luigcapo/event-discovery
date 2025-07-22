@@ -1,9 +1,7 @@
 package com.yuewie.apievent.service.impl;
 
-import com.yuewie.apievent.dto.EventDto;
-import com.yuewie.apievent.dto.EventSearchCriteria;
+import com.yuewie.apievent.dto.*;
 import com.yuewie.apievent.entity.Event;
-import com.yuewie.apievent.exception.BadRequestException;
 import com.yuewie.apievent.mapper.EventMapper;
 import com.yuewie.apievent.repository.*;
 import com.yuewie.apievent.repository.impl.EventSpecifications;
@@ -26,8 +24,8 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-@Loggable
 @Transactional
+@Loggable
 public class EventServiceImpl implements EventService {
 
     private final EventMapper eventMapper;
@@ -52,14 +50,12 @@ public class EventServiceImpl implements EventService {
     }
 
     @Transactional(readOnly = true)
-    @Loggable(logParams = true)
     @Override
     public List<EventDto> findAllEvent() {
         return eventRepository.findAll().stream().map(eventMapper::toDto).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    @Loggable(logParams = true)
     @Override
     public List<EventDto> searchEventUsingJpql(EventSearchCriteria eventSearchCriteria) {
 
@@ -67,7 +63,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Transactional(readOnly = true)
-    @Loggable(logParams = true)
     @Override
     public List<EventDto> searchEventUsingCriteria(EventSearchCriteria eventSearchCriteria) {
         return eventCriteriaApiRepository.findAllCriteaApi(eventSearchCriteria).stream().map(eventMapper::toDto).collect(Collectors.toList());
@@ -98,22 +93,47 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventDto createEvent(EventDto eventDto) {
+    public EventDto createEvent(EventCreateDto eventDto) {
         Objects.requireNonNull(eventDto, "eventDto cannot be null");
         Event event = eventMapper.toEntity(eventDto);
         Event createdEvent = eventRepository.save(event);
         return eventMapper.toDto(createdEvent);
     }
 
+    /**
+     * Update à l'ancienne un événement existant. ON remplace tout le contenu de l'événement par le contenu du DTO.
+     *RIsque de perdre des données si le DTO ne contient pas tous les champs.
+     * @param eventId
+     * @param eventDto
+     * @return eventDto
+     */
     @Override
-    public EventDto updateEvent(Long eventId, EventDto eventDto) {
+    public EventDto updateEvent(Long eventId, EventUpdateDto eventDto) {
         Objects.requireNonNull(eventDto, "eventDto cannot be null");
-        if (!eventId.equals(eventDto.getId())) {
-            throw new BadRequestException("ID mismatch between path and request body");
-        }
+        Event eventExisted = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + eventId));
+        Event updated = eventMapper.toEntity(eventDto);
+        updated.setId(eventId); // Assure qu'on veut faire une mise à jour de l'événement existant
+        updated.setAdresses(eventExisted.getAdresses()); // Conserve les adresses existantes
+        return eventMapper.toDto(eventRepository.save(updated));
+    }
+
+    /**
+     * UPDATE MODERNE
+     * Patch un événement existant. ON ne met à jour que les champs non-nuls du DTO.
+     * @param eventId
+     * @param eventPatchDto
+     * @return eventDto
+     */
+    @Override
+    public EventDto patchEvent(Long eventId, EventPatchDto eventPatchDto) {
+        Objects.requireNonNull(eventPatchDto, "eventUpdateDto cannot be null");
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + eventId));
-        return eventMapper.toDto(eventRepository.save(eventMapper.toEntity(eventDto)));
+
+        eventMapper.updateEntityFromDto(eventPatchDto, event); // MapStruct applique uniquement les champs non-nuls
+
+        return eventMapper.toDto(eventRepository.save(event));
     }
 
 
@@ -125,6 +145,7 @@ public class EventServiceImpl implements EventService {
         eventRepository.deleteById(eventId);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public EventDto getEvent(Long id) {
         return eventRepository.findById(id).map(eventMapper::toDto).orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + id));

@@ -1,8 +1,6 @@
 package com.yuewie.apievent.service;
 
-import com.yuewie.apievent.dto.EventDto;
-import com.yuewie.apievent.dto.EventSearchCriteria;
-import com.yuewie.apievent.aop.log.Loggable;
+import com.yuewie.apievent.dto.*;
 
 import java.util.List;
 
@@ -15,9 +13,11 @@ public interface EventService {
     List<EventDto> searchEventUsingQueryDSL(EventSearchCriteria eventSearchCriteria);
 
 
-    EventDto createEvent(EventDto eventDto);
+    EventDto createEvent(EventCreateDto eventDto);
 
-    EventDto updateEvent(Long eventId, EventDto eventDto);
+    EventDto updateEvent(Long eventId, EventUpdateDto eventDto);
+
+    EventDto patchEvent(Long eventId, EventPatchDto updateDto);
 
     void deleteEvent(Long eventId);
 

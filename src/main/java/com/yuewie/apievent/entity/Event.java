@@ -2,9 +2,8 @@ package com.yuewie.apievent.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -42,5 +41,7 @@ public class Event {
     )
     @Column(nullable = false)
     @Size(min = 1, message = "Un événement doit avoir au moins une adresse")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Set<Adresse> adresses;
 }

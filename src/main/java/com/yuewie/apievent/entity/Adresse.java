@@ -1,10 +1,7 @@
 package com.yuewie.apievent.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Set;
 
@@ -32,5 +29,7 @@ public class Adresse {
     private String pays;
 
     @ManyToMany(mappedBy = "adresses")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     Set<Event> events;
 }

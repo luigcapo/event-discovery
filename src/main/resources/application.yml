@@ -46,3 +46,10 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+app:
+  name: api-event
+  description: API pour la gestion des événements
+  kafka:
+    topic:
+      eventCreated: event.created
+      eventCreatedImpaired: event.created.impair

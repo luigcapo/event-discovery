@@ -22,4 +22,6 @@ public interface EventService {
     void deleteEvent(Long eventId);
 
     EventDto getEvent(Long id);
+
+    EventDto createEventWithEnvoieKafka(EventCreateDto eventDto);
 }

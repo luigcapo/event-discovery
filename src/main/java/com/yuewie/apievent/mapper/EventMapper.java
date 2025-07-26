@@ -1,9 +1,6 @@
 package com.yuewie.apievent.mapper;
 
-import com.yuewie.apievent.dto.EventCreateDto;
-import com.yuewie.apievent.dto.EventDto;
-import com.yuewie.apievent.dto.EventUpdateDto;
-import com.yuewie.apievent.dto.EventPatchDto;
+import com.yuewie.apievent.dto.*;
 import com.yuewie.apievent.entity.Event;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
@@ -18,4 +15,6 @@ public interface EventMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntityFromDto(EventPatchDto dto, @MappingTarget Event entity);
+    EventCreatedKafkaPayload toKafkaPayload(EventDto eventDto);
+
 }

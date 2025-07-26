@@ -128,6 +128,23 @@ public class EventController {
 
     /* ---------- CREATE ---------- */
 
+    @PostMapping("/kafka")
+    @Operation(summary = "Créer un nouvel événement et l'envoyer à kafka",
+            description = "Crée un nouvel événement et l'envoyer à kafka en fonction des données fournies.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Événement créé avec succès", content = @Content(schema = @Schema(implementation = EventDto.class))),
+            @ApiResponse(responseCode = "400", description = "Données invalides fournies pour la création de l'événement", content = @Content(schema = @Schema(implementation = ApiError.class))),
+    })
+    public ResponseEntity<EventDto> createEventAndSendToKafka(
+            @Parameter(description = "Données de l'événement à créer", required = true)
+            @RequestBody @Valid EventCreateDto dto) {
+        EventDto created = eventService.createEventWithEnvoieKafka(dto);
+        URI location = URI.create("/api/events/" + created.getId());
+        return ResponseEntity
+                .created(location).body(created);
+    }
+
+
     @PostMapping
     @Operation(summary = "Créer un nouvel événement",
             description = "Crée un nouvel événement en fonction des données fournies.")

@@ -1,15 +1,15 @@
-HELP.md
-target/
-.mvn/wrapper/maven-wrapper.jar
+### service api event ###
+apievent/target/
+apievent/.mvn/wrapper/maven-wrapper.jar
 
 ### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+apievent/.apt_generated
+apievent/.classpath
+apievent/.factorypath
+apievent/.project
+apievent/.settings
+apievent/.springBeans
+apievent/.sts4-cache
 
 ### IntelliJ IDEA ###
 .idea
@@ -18,4 +18,4 @@ target/
 *.ipr
 
 ### perso ###
-logs/
+apievent/logs/

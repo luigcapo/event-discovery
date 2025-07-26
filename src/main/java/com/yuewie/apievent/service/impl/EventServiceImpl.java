@@ -1,7 +1,11 @@
 package com.yuewie.apievent.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yuewie.apievent.dto.*;
 import com.yuewie.apievent.entity.Event;
+import com.yuewie.apievent.entity.OutboxEvent;
+import com.yuewie.apievent.helper.KafkaPayloadHelper;
 import com.yuewie.apievent.mapper.EventMapper;
 import com.yuewie.apievent.repository.*;
 import com.yuewie.apievent.repository.impl.EventSpecifications;
@@ -10,6 +14,7 @@ import com.yuewie.apievent.aop.log.Loggable;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +23,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -35,11 +41,20 @@ public class EventServiceImpl implements EventService {
     private final EventSqlNativeRepository eventSqlNativeRepository;
     private final EventQueryDSLRepository   eventQueryDSLRepository;
     private final EventCriteriaApiRepository eventCriteriaApiRepository;
+    private final KafkaPayloadHelper kafkaPayloadHelper;
+    private final OutboxEventRepository outboxEventRepository;
+
+    @Value("${app.kafka.topic.eventCreated}")
+    private String eventCreatedTopic;
+
+    @Value("${app.kafka.topic.eventCreatedImpaired}")
+    private String eventCreatedImpairTopic;
 
     @Autowired
-    public EventServiceImpl(EventMapper eventMapper, EventRepository eventRepository,EventJooqRepository eventJooqRepository,
+    public EventServiceImpl(EventMapper eventMapper, EventRepository eventRepository, EventJooqRepository eventJooqRepository,
                             EventJpqlRepository eventJpqlRepository, EventSqlNativeRepository eventSqlNativeRepository,
-                            EventQueryDSLRepository eventQueryDSLRepository, EventCriteriaApiRepository eventCriteriaApiRepository) {
+                            EventQueryDSLRepository eventQueryDSLRepository, EventCriteriaApiRepository eventCriteriaApiRepository,
+                            KafkaPayloadHelper kafkaPayloadHelper, OutboxEventRepository outboxEventRepository) {
         this.eventMapper = eventMapper;
         this.eventRepository = eventRepository;
         this.eventJooqRepository = eventJooqRepository;
@@ -47,25 +62,27 @@ public class EventServiceImpl implements EventService {
         this.eventSqlNativeRepository = eventSqlNativeRepository;
         this.eventQueryDSLRepository = eventQueryDSLRepository;
         this.eventCriteriaApiRepository = eventCriteriaApiRepository;
+        this.kafkaPayloadHelper = kafkaPayloadHelper;
+        this.outboxEventRepository = outboxEventRepository;
     }
 
     @Transactional(readOnly = true)
     @Override
     public List<EventDto> findAllEvent() {
-        return eventRepository.findAll().stream().map(eventMapper::toDto).collect(Collectors.toList());
+        return eventRepository.findAll().stream().map(eventMapper::toDto).toList();
     }
 
     @Transactional(readOnly = true)
     @Override
     public List<EventDto> searchEventUsingJpql(EventSearchCriteria eventSearchCriteria) {
 
-        return eventJpqlRepository.findAllJpql(eventSearchCriteria).stream().map(eventMapper::toDto).collect(Collectors.toList());
+        return eventJpqlRepository.findAllJpql(eventSearchCriteria).stream().map(eventMapper::toDto).toList();
     }
 
     @Transactional(readOnly = true)
     @Override
     public List<EventDto> searchEventUsingCriteria(EventSearchCriteria eventSearchCriteria) {
-        return eventCriteriaApiRepository.findAllCriteaApi(eventSearchCriteria).stream().map(eventMapper::toDto).collect(Collectors.toList());
+        return eventCriteriaApiRepository.findAllCriteaApi(eventSearchCriteria).stream().map(eventMapper::toDto).toList();
     }
 
     @Transactional(readOnly = true)
@@ -83,13 +100,13 @@ public class EventServiceImpl implements EventService {
     @Transactional(readOnly = true)
     @Override
     public List<EventDto> searchEventUsingNativeSql(EventSearchCriteria eventSearchCriteria) {
-        return eventSqlNativeRepository.findAllNativeSQL(eventSearchCriteria).stream().map(eventMapper::toDto).collect(Collectors.toList());
+        return eventSqlNativeRepository.findAllNativeSQL(eventSearchCriteria).stream().map(eventMapper::toDto).toList();
     }
 
     @Transactional(readOnly = true)
     @Override
     public List<EventDto> searchEventUsingQueryDSL(EventSearchCriteria eventSearchCriteria) {
-        return eventQueryDSLRepository.findAllQueryDsl(eventSearchCriteria).stream().map(eventMapper::toDto).collect(Collectors.toList());
+        return eventQueryDSLRepository.findAllQueryDsl(eventSearchCriteria).stream().map(eventMapper::toDto).toList();
     }
 
     @Override
@@ -150,4 +167,37 @@ public class EventServiceImpl implements EventService {
     public EventDto getEvent(Long id) {
         return eventRepository.findById(id).map(eventMapper::toDto).orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + id));
     }
+
+    @Override
+    public EventDto createEventWithEnvoieKafka(EventCreateDto eventDto) {
+        EventDto createdEventDto;
+        createdEventDto = createEvent(eventDto);
+        EventCreatedKafkaPayload createdEventKafkaPayload = eventMapper.toKafkaPayload(createdEventDto);
+        String payloadJson = kafkaPayloadHelper.toJson(createdEventKafkaPayload);
+
+        // 3. Prepare and save the Outbox event (ex: topic = "event.created", key = createdEventDto.id)
+        OutboxEvent outboxEvent = new OutboxEvent(
+                null, // id auto-généré
+                eventCreatedTopic, // topic Kafka (ou autre)
+                String.valueOf(createdEventDto.getId()), // key
+                payloadJson,
+                false, // sent = false
+                LocalDateTime.now(),
+                null
+        );
+        outboxEventRepository.save(outboxEvent);
+        outboxEvent = new OutboxEvent(
+                null, // id auto-généré
+                eventCreatedImpairTopic, // topic Kafka (ou autre)
+                String.valueOf(createdEventDto.getId()), // key
+                payloadJson,
+                false, // sent = false
+                LocalDateTime.now(),
+                null
+        );
+        outboxEventRepository.save(outboxEvent);
+        return createdEventDto;
+    }
+
+
 }

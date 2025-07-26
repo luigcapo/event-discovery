@@ -47,7 +47,7 @@ public class EventServiceImpl implements EventService {
     @Value("${app.kafka.topic.eventCreated}")
     private String eventCreatedTopic;
 
-    @Value("${app.kafka.topic.eventCreatedImpair}")
+    @Value("${app.kafka.topic.eventCreatedImpaired}")
     private String eventCreatedImpairTopic;
 
     @Autowired

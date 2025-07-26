@@ -4,6 +4,6 @@ CREATE TABLE IF NOT EXISTS outbox_event (
     kafka_key VARCHAR(255) NOT NULL,
     payload TEXT NOT NULL,
     processed BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     processed_at TIMESTAMP
 );

@@ -1,8 +1,13 @@
 package com.yuewie.apievent.dto;
 
+import lombok.Data;
+
+import java.time.LocalDateTime;
+
+@Data
 public class EventCreatedKafkaPayload {
-    private Long eventId;
+    private Long id;
     private String name;
-    private String startDate;
-    private String endDate;
+    private LocalDateTime start;
+    private LocalDateTime end;
 }

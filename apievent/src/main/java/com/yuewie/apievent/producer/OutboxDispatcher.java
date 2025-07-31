@@ -1,4 +1,4 @@
-package com.yuewie.apievent.batch;
+package com.yuewie.apievent.producer;
 
 import com.yuewie.apievent.entity.OutboxEvent;
 import com.yuewie.apievent.repository.OutboxEventRepository;

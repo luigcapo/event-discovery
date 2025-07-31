@@ -11,6 +11,34 @@ apievent/.settings
 apievent/.springBeans
 apievent/.sts4-cache
 
+### service api event ###
+eventnotifications/target/
+eventnotifications/.mvn/wrapper/maven-wrapper.jar
+
+### STS ###
+eventnotifications/.apt_generated
+eventnotifications/.classpath
+eventnotifications/.factorypath
+eventnotifications/.project
+eventnotifications/.settings
+eventnotifications/.springBeans
+eventnotifications/.sts4-cache
+
+### service api event ###
+eventstats/target/
+eventstats/.mvn/wrapper/maven-wrapper.jar
+
+### STS ###
+eventstats/.apt_generated
+eventstats/.classpath
+eventstats/.factorypath
+eventstats/.project
+eventstats/.settings
+eventstats/.springBeans
+eventstats/.sts4-cache
+
+
+
 ### IntelliJ IDEA ###
 .idea
 *.iws
@@ -19,3 +47,4 @@ apievent/.sts4-cache
 
 ### perso ###
 apievent/logs/
+.env

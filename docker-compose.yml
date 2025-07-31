@@ -1,5 +1,5 @@
 networks:
-  kafka-cluster-net:
+  app-network:
     driver: bridge
 services:
   kafka1:
@@ -7,7 +7,7 @@ services:
     container_name: kafka1
     hostname: kafka1
     networks:
-      - kafka-cluster-net
+      - app-network
     ports:
       - "9092:9092"
     environment:
@@ -29,7 +29,7 @@ services:
     container_name: kafka2
     hostname: kafka2
     networks:
-      - kafka-cluster-net
+      - app-network
     ports:
       - "9093:9092"
     environment:
@@ -51,7 +51,7 @@ services:
     container_name: kafka3
     hostname: kafka3
     networks:
-      - kafka-cluster-net
+      - app-network
     ports:
       - "9094:9092"
     environment:
@@ -66,7 +66,20 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_LOG_DIRS: '/tmp/kraft-logs-3'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      
+     
+   # --- Service Redis ajouté ---
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    hostname: redis-event
+    restart: unless-stopped
+    command: --requirepass ${REDIS_PASSWORD}
+    networks:
+      - app-network
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data    
 
 
 

@@ -1,0 +1,32 @@
+spring:
+    application:
+        name: event-notifications
+    kafka:
+        bootstrap-servers: kafka1:9092,kafka2:9092,kafka3:9092
+        consumer:
+            enable-auto-commit: false
+            max-poll-records: 10
+        listener:
+            type: single
+            ack-mode: MANUAL
+    data:
+        redis:
+            host: redis-event
+            port: 6379
+            password: ${REDIS_PASSWORD}
+app:
+    kafka:
+        topic:
+            eventCreated: event.created
+            eventCreatedImpaired: event.created.impair
+        group:
+            id: event-notifications-group
+management:
+    tracing:
+        enabled: true
+        sampling:
+            probability: 1.0 # 100% des requêtes sont échantillonnées
+    # Configuration unifiée et moderne pour OTLP
+    otlp:
+        tracing:
+            endpoint: http://localhost:4318/v1/traces

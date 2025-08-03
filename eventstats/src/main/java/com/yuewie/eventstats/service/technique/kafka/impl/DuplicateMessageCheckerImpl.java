@@ -1,6 +1,6 @@
 package com.yuewie.eventstats.service.technique.kafka.impl;
 
-import com.yuewie.eventnotifications.service.technique.kafka.DuplicateMessageChecker;
+import com.yuewie.eventstats.service.technique.kafka.DuplicateMessageChecker;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 

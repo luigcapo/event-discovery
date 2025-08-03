@@ -12,7 +12,7 @@ import java.util.Objects;
 public abstract class BaseKafkaConsumer<T> {
 
     private static final String ID_BUSINESS = "businessIdNotifications";
-    private static final String ID_DELIVERY = "deliveryId";
+    private static final String ID_DELIVERY = "deliveryIdNotifications";
 
     private final DuplicateMessageChecker duplicateChecker;
 

@@ -6,10 +6,13 @@ services:
     image: confluentinc/cp-kafka:7.6.0
     container_name: kafka1
     hostname: kafka1
+    user: "0:0" # : Lance en tant que root
     networks:
       - app-network
     ports:
       - "9092:9092"
+    volumes:
+      - kafka1-data:/tmp/kraft-logs-1
     environment:
       KAFKA_PROCESS_ROLES: 'broker,controller'
       KAFKA_NODE_ID: 1
@@ -28,10 +31,13 @@ services:
     image: confluentinc/cp-kafka:7.6.0
     container_name: kafka2
     hostname: kafka2
+    user: "0:0" # : Lance en tant que root
     networks:
       - app-network
     ports:
       - "9093:9092"
+    volumes:
+      - kafka2-data:/tmp/kraft-logs-2
     environment:
       KAFKA_PROCESS_ROLES: 'broker,controller'
       KAFKA_NODE_ID: 2
@@ -50,10 +56,13 @@ services:
     image: confluentinc/cp-kafka:7.6.0
     container_name: kafka3
     hostname: kafka3
+    user: "0:0" # : Lance en tant que root
     networks:
       - app-network
     ports:
       - "9094:9092"
+    volumes:
+      - kafka3-data:/tmp/kraft-logs-3
     environment:
       KAFKA_PROCESS_ROLES: 'broker,controller'
       KAFKA_NODE_ID: 3
@@ -79,7 +88,92 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - redis-data:/data    
+      - redis-data:/data
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-db
+    hostname: postgres
+    networks:
+      - app-network
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    env_file:
+      - .env.dev
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    hostname: jaeger
+    networks:
+      - app-network
+    ports:
+      - "16686:16686" # UI
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    restart: on-failure
+
+  apievent:
+    build:
+      context: ./apievent
+      dockerfile: Dockerfile
+    container_name: apievent-service
+    networks:
+      - app-network
+    ports:
+      - "8081:8080"
+    env_file:
+      - .env.dev
+    depends_on:
+      - postgres
+      - kafka1
+      - jaeger
+    restart: on-failure
+
+  eventnotifications:
+    build:
+      context: ./eventnotifications
+      dockerfile: Dockerfile
+    container_name: eventnotifications-service
+    networks:
+      - app-network
+    env_file:
+      - .env.dev
+    depends_on:
+      - kafka1
+      - redis
+      - jaeger
+    restart: on-failure
+
+  eventstats:
+    build:
+      context: ./eventstats
+      dockerfile: Dockerfile
+    container_name: eventstats-service
+    networks:
+      - app-network
+    env_file:
+      - .env.dev
+    depends_on:
+      - kafka1
+      - redis
+      - jaeger
+    restart: on-failure
+
+volumes:
+  postgres-data:
+  redis-data:
+  kafka1-data:
+  kafka2-data:
+  kafka3-data:
 
 
 

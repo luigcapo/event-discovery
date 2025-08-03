@@ -14,6 +14,6 @@ import java.time.LocalDateTime;
 public class EventCreatedDto {
     private Long id;
     private String name;
-    private LocalDateTime start;
-    private LocalDateTime end;
+    private String start;
+    private String end;
 }

@@ -1,0 +1,16 @@
+# Fichiers et dossiers générés par le build
+target/
+.mvn/
+
+# Fichiers de l'IDE et de Git
+.idea/
+*.iml
+.git/
+.gitignore
+
+# Fichiers de configuration locaux
+mvnw
+mvnw.cmd
+
+# Documentation
+README.md

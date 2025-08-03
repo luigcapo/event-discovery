@@ -19,7 +19,7 @@ public class EventCreatedConsumer extends BaseKafkaConsumer<EventCreatedDto> {
         super(duplicateChecker);
     }
 
-    @KafkaListener(topics = "${app.kafka.topic.eventCreated}", groupId = "${app.kafka.group.id.events}")
+    @KafkaListener(topics = "${app.kafka.topic.eventCreated}", groupId = "${app.kafka.group.id}",  containerFactory = "kafkaListenerContainerFactory")
     public void listen(@Payload EventCreatedDto data,
                        @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
                        @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,

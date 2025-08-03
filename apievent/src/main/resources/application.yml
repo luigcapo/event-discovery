@@ -2,9 +2,10 @@ spring:
   profiles:
     active: dev
   datasource:
-      url: jdbc:postgresql://localhost:5432/event
-      username: postgres
-      password: monchichi
+      # j'utilise la syntaxe ${NOM_DE_LA_VARIABLE:valeur_par_defaut}
+      url: jdbc:postgresql://postgres:5432/${DB_NAME:event}
+      username: ${DB_USER:postgres}
+      password: ${DB_PASSWORD:monchichi}
   jpa:
     hibernate:
       ddl-auto: none
@@ -18,8 +19,8 @@ spring:
     locations:
       - classpath:db/migration/old
       - classpath:db/migration/new
-    user: postgres
-    password: monchichi
+    user: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:monchichi}
   application:
     name: api-event
   kafka:
@@ -40,7 +41,7 @@ management:
   # Configuration unifiée et moderne pour OTLP
   otlp:
     tracing:
-      endpoint: http://localhost:4318/v1/traces
+      endpoint: http://jaeger:4318/v1/traces
 logging:
     level:
         org.hibernate.SQL: INFO

@@ -44,6 +44,8 @@ eventstats/.sts4-cache
 *.iws
 *.iml
 *.ipr
+.env
+.env.*
 
 ### perso ###
 apievent/logs/

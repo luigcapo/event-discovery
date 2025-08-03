@@ -6,9 +6,13 @@ spring:
         consumer:
             enable-auto-commit: false
             max-poll-records: 10
+            #value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+            # Comportement lorsqu'un nouveau groupe consomme un topic pour la première fois.
+            # 'earliest': commence au tout début.
+            # 'latest': ne lit que les nouveaux messages (défaut).
+            auto-offset-reset: earliest
         listener:
             type: single
-            ack-mode: MANUAL
     data:
         redis:
             host: redis-event
@@ -29,4 +33,4 @@ management:
     # Configuration unifiée et moderne pour OTLP
     otlp:
         tracing:
-            endpoint: http://localhost:4318/v1/traces
+            endpoint: http://jaeger:4318/v1/traces

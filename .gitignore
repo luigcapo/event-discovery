@@ -48,5 +48,5 @@ eventstats/.sts4-cache
 .env.*
 
 ### perso ###
-apievent/logs/
+logs/
 .env

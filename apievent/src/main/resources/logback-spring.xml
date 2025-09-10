@@ -22,10 +22,10 @@
     <!-- Appender JSON pour OpenTelemetry (pour les environnements déployés)-->
     <!-- ================================================================== -->
     <appender name="JSON_OTEL" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/app.json</file>
+        <file>/logs/apievent/app.json</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- Rotation quotidienne des fichiers de log -->
-            <fileNamePattern>logs/app-log-%d{yyyy-MM-dd}.json.gz</fileNamePattern>
+            <fileNamePattern>/logs/apievent/app-log-%d{yyyy-MM-dd}.json.gz</fileNamePattern>
             <!-- Garde 30 jours d'historique, compresse les anciens fichiers -->
             <maxHistory>30</maxHistory>
         </rollingPolicy>

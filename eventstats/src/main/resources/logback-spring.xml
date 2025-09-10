@@ -7,7 +7,6 @@
     <!-- Propriété pour le nom de l'application, récupérée depuis application.properties -->
     <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="my-app"/>
 
-
     <!-- ================================================================== -->
     <!-- Appender pour la CONSOLE (pour l'env de dev)             -->
     <!-- ================================================================== -->
@@ -23,10 +22,10 @@
     <!-- Appender JSON pour OpenTelemetry (pour les environnements déployés)-->
     <!-- ================================================================== -->
     <appender name="JSON_OTEL" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/logs/eventnotifications/app.json</file>
+        <file>/logs/eventstats/app.json</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- Rotation quotidienne des fichiers de log -->
-            <fileNamePattern>/logs/eventnotifications/app-log-%d{yyyy-MM-dd}.json.gz</fileNamePattern>
+            <fileNamePattern>/logs/eventstats/app-log-%d{yyyy-MM-dd}.json.gz</fileNamePattern>
             <!-- Garde 30 jours d'historique, compresse les anciens fichiers -->
             <maxHistory>30</maxHistory>
         </rollingPolicy>

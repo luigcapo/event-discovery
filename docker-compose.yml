@@ -121,6 +121,73 @@ services:
       - COLLECTOR_OTLP_ENABLED=true
     restart: on-failure
 
+  # --- AJOUT: Services Elastic Stack ---
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    container_name: elasticsearch
+    environment:
+      - "discovery.type=single-node"
+      - "xpack.security.enabled=false"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    networks:
+      - app-network
+    volumes:
+      - es-data:/usr/share/elasticsearch/data # Volume pour la persistance
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.1
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    environment:
+      - "ELASTICSEARCH_HOSTS=http://elasticsearch:9200"
+    networks:
+      - app-network
+
+  # --- AJOUT: Un service Filebeat pour chaque application ---
+  filebeat-apievent:
+    image: docker.elastic.co/beats/filebeat:8.11.1
+    container_name: filebeat-apievent
+    user: root
+    volumes:
+      - ./elk/filebeat/apievent.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./logs/apievent:/usr/share/filebeat/logs:ro # Monte les logs du service
+    depends_on:
+      - elasticsearch
+      - apievent
+    networks:
+      - app-network
+
+  filebeat-eventnotifications:
+    image: docker.elastic.co/beats/filebeat:8.11.1
+    container_name: filebeat-eventnotifications
+    user: root
+    volumes:
+      - ./elk/filebeat/eventnotifications.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./logs/eventnotifications:/usr/share/filebeat/logs:ro # Monte les logs du service
+    depends_on:
+      - elasticsearch
+      - eventnotifications
+    networks:
+      - app-network
+
+  filebeat-eventstats:
+    image: docker.elastic.co/beats/filebeat:8.11.1
+    container_name: filebeat-eventstats
+    user: root
+    volumes:
+      - ./elk/filebeat/eventstats.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./logs/eventstats:/usr/share/filebeat/logs:ro # Monte les logs du service
+    depends_on:
+      - elasticsearch
+      - eventstats
+    networks:
+      - app-network
+
   apievent:
     build:
       context: ./apievent
@@ -132,6 +199,8 @@ services:
       - "8081:8080"
     env_file:
       - .env.dev
+    volumes:
+      - ./logs/apievent:/logs/apievent
     depends_on:
       - postgres
       - kafka1
@@ -147,6 +216,8 @@ services:
       - app-network
     env_file:
       - .env.dev
+    volumes:
+      - ./logs/eventnotifications:/logs/eventnotifications
     depends_on:
       - kafka1
       - redis
@@ -162,6 +233,8 @@ services:
       - app-network
     env_file:
       - .env.dev
+    volumes: 
+      - ./logs/eventstats:/logs/eventstats
     depends_on:
       - kafka1
       - redis
@@ -174,6 +247,7 @@ volumes:
   kafka1-data:
   kafka2-data:
   kafka3-data:
+  es-data:
 
 
 

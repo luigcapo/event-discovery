@@ -1,14 +1,18 @@
 package com.yuewie.apievent.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 
-@Data
+
+@Getter
+@Setter
+@ToString(exclude = "liens")
 @Entity
 @Table(name = "event")
 @NoArgsConstructor // Required for JPA
@@ -33,15 +37,30 @@ public class Event {
     @Column(name = "end_date", nullable = false)
     private LocalDateTime end;
 
-    @ManyToMany(cascade = CascadeType.PERSIST)
-    @JoinTable(
-            name = "lien_adresse_event",
-            joinColumns = @JoinColumn(name = "event_id"),
-            inverseJoinColumns = @JoinColumn(name = "adresse_id")
-    )
-    @Column(nullable = false)
-    @Size(min = 1, message = "Un événement doit avoir au moins une adresse")
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private Set<Adresse> adresses;
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<LienEventAdresse> liens = new HashSet<>();
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Event event)) return false;
+        return Objects.equals(id, event.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    public void addLien(LienEventAdresse lien) {
+        lien.setEvent(this); // On recolle le parent (indispensable avec le Mapper)
+        this.liens.add(lien);
+    }
+
+    public void removeLien(Adresse adresse) {
+        // On cherche le lien qui pointe vers cette adresse et on le dégage
+        // C'est 100% sûr car on compare l'ID de l'adresse (fiable)
+        this.liens.removeIf(lien -> lien.getAdresse().equals(adresse));
+    }
+
+
 }

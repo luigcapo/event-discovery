@@ -3,6 +3,7 @@ package com.yuewie.apievent.repository.impl;
 import com.yuewie.apievent.dto.EventSearchCriteria;
 import com.yuewie.apievent.entity.Adresse;
 import com.yuewie.apievent.entity.Event;
+import com.yuewie.apievent.entity.LienEventAdresse;
 import com.yuewie.apievent.utils.DateUtils;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -14,11 +15,15 @@ import java.time.LocalDateTime;
 public class EventSpecifications {
 
     private static Join<Event, Adresse> adresseJoin(Root<Event> root, JoinType type) {
-        return root.getJoins().stream()
+        // 1. Récupérer ou créer la jointure vers le LIEN
+        Join<Event, LienEventAdresse> lienJoin = root.getJoins().stream()
                 .filter(j -> "adresses".equals(j.getAttribute().getName()))
-                .map(j -> (Join<Event, Adresse>) j)
+                .map(j -> (Join<Event, LienEventAdresse>) j)
                 .findFirst()
                 .orElseGet(() -> root.join("adresses", type));
+
+        // 2. Retourner la jointure vers l'ADRESSE (c'est ce que les specs attendent pour filtrer sur la ville)
+        return lienJoin.join("adresse", type);
     }
 
     public static Specification<Event> byName(String name) {
@@ -50,13 +55,23 @@ public class EventSpecifications {
         };
     }
 
-    public static Specification<Event> byIntituleAdresse(String intituleAdresse) {
+    public static Specification<Event> byNumero(String numero) {
         return (root, query, criteriaBuilder) -> {
-            if (intituleAdresse == null || intituleAdresse.isBlank()) {
+            if (numero == null || numero.isBlank()) {
                 return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
             }
             Join<Event, Adresse> adresseJoin = adresseJoin(root, JoinType.INNER);
-            return criteriaBuilder.like(criteriaBuilder.lower(adresseJoin.get("intituleAdresse")), "%" + intituleAdresse.toLowerCase() + "%");
+            return criteriaBuilder.like(criteriaBuilder.lower(adresseJoin.get("numero")), "%" + numero.toLowerCase() + "%");
+        };
+    }
+
+    public static Specification<Event> byRue(String rue) {
+        return (root, query, criteriaBuilder) -> {
+            if (rue == null || rue.isBlank()) {
+                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
+            Join<Event, Adresse> adresseJoin = adresseJoin(root, JoinType.INNER);
+            return criteriaBuilder.like(criteriaBuilder.lower(adresseJoin.get("rue")), "%" + rue.toLowerCase() + "%");
         };
     }
 
@@ -91,8 +106,11 @@ public class EventSpecifications {
         if (eventSearchCriteria.getCodePostal() != null && !eventSearchCriteria.getCodePostal().isBlank()) {
             spec = spec.and( byCodePostal(eventSearchCriteria.getCodePostal()) );
         }
-        if (eventSearchCriteria.getIntituleAdresse() != null && !eventSearchCriteria.getIntituleAdresse().isBlank()) {
-            spec = spec.and( byIntituleAdresse(eventSearchCriteria.getIntituleAdresse()) );
+        if (eventSearchCriteria.getNumero() != null && !eventSearchCriteria.getNumero().isBlank()) {
+            spec = spec.and( byNumero(eventSearchCriteria.getNumero()) );
+        }
+        if (eventSearchCriteria.getRue() != null && !eventSearchCriteria.getRue().isBlank()) {
+            spec = spec.and( byRue(eventSearchCriteria.getRue()) );
         }
         if (eventSearchCriteria.getStartDate() != null && !eventSearchCriteria.getStartDate().isBlank()) {
             LocalDateTime startDateTime = DateUtils.convert(eventSearchCriteria.getStartDate(), eventSearchCriteria.getStartTime());

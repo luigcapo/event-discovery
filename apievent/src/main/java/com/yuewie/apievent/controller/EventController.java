@@ -221,4 +221,59 @@ public class EventController {
             @PathVariable @Min(1) Long id) {
         eventService.deleteEvent(id);
     }
+
+    /* ========================================================== */
+    /* GESTION DES ADRESSES (Granulaire / DDD)          */
+    /* ========================================================== */
+
+    /**
+     * POST /api/v1/events/{id}/adresses
+     * Ajoute une adresse spécifique à l'événement.
+     */
+    @PostMapping("/{id}/adresses")
+    @Operation(summary = "Ajouter une adresse à un événement",
+            description = "Ajoute une adresse (et son contexte : principale ou non) à un événement existant. " +
+                    "Si l'adresse existe déjà en base (via ID), elle est réutilisée.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Adresse ajoutée, événement mis à jour retourné",
+                    content = @Content(schema = @Schema(implementation = EventDto.class))),
+            @ApiResponse(responseCode = "404", description = "Événement ou Adresse non trouvée",
+                    content = @Content(schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "400", description = "Données invalides",
+                    content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
+    public ResponseEntity<EventDto> addAdresseToEvent(
+            @Parameter(description = "ID de l'événement", required = true, example = "1")
+            @PathVariable @Min(1) Long id,
+
+            @Parameter(description = "Détails du lien adresse (principal + adresse)", required = true)
+            @RequestBody @Valid LienEventAdresseRequestDto lienDto) {
+
+        EventDto updatedEvent = eventService.addAdresse(id, lienDto);
+        return ResponseEntity.ok(updatedEvent);
+    }
+
+    /**
+     * DELETE /api/v1/events/{id}/adresses/{adresseId}
+     * Retire une adresse spécifique de l'événement.
+     */
+    @DeleteMapping("/{id}/adresses/{adresseId}")
+    @Operation(summary = "Retirer une adresse d'un événement",
+            description = "Supprime le lien entre un événement et une adresse spécifique. " +
+                    "L'adresse physique n'est pas supprimée, seul le lien est retiré.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Adresse retirée avec succès"),
+            @ApiResponse(responseCode = "404", description = "Événement ou Adresse non trouvée",
+                    content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
+    @ResponseStatus(HttpStatus.NO_CONTENT) // 204
+    public void removeAdresseFromEvent(
+            @Parameter(description = "ID de l'événement", required = true)
+            @PathVariable @Min(1) Long id,
+
+            @Parameter(description = "ID de l'adresse à retirer", required = true)
+            @PathVariable @Min(1) Long adresseId) {
+
+        eventService.removeAdresse(id, adresseId);
+    }
 }

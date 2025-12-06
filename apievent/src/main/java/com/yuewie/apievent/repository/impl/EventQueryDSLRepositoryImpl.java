@@ -40,13 +40,16 @@ public class EventQueryDSLRepositoryImpl implements EventQueryDSLRepository {
             where.and(event.name.containsIgnoreCase(criteria.getName()));
         }
         if (StringUtils.hasText(criteria.getVille())) {
-            where.and(event.adresses.any().ville.containsIgnoreCase(criteria.getVille()));
+            where.and(event.liens.any().adresse.ville.containsIgnoreCase(criteria.getVille()));
         }
         if (StringUtils.hasText(criteria.getCodePostal())) {
-            where.and(event.adresses.any().codePostal.equalsIgnoreCase(criteria.getCodePostal()));
+            where.and(event.liens.any().adresse.codePostal.equalsIgnoreCase(criteria.getCodePostal()));
         }
-        if (StringUtils.hasText(criteria.getIntituleAdresse())) {
-            where.and(event.adresses.any().intituleAdresse.containsIgnoreCase(criteria.getIntituleAdresse()));
+        if (StringUtils.hasText(criteria.getNumero())) {
+            where.and(event.liens.any().adresse.numero.containsIgnoreCase(criteria.getNumero()));
+        }
+        if (StringUtils.hasText(criteria.getRue())) {
+            where.and(event.liens.any().adresse.rue.containsIgnoreCase(criteria.getRue()));
         }
 
         if (StringUtils.hasText(criteria.getStartDate())) {

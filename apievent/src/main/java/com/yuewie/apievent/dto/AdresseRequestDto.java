@@ -1,26 +1,34 @@
 package com.yuewie.apievent.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 
 @Data
 @Builder
+@Schema(name = "AdresseInput", description = "Structure d'une adresse pour la création ou la modification.")
 public class AdresseRequestDto {
-    //Pas beosin du jsonIgnore comme dans l'event ici car je ne veux pas modifier une adresse existante.
-    //Si l'adresse existe déjà, on ne la modifie pas, on en crée une nouvelle.
-    //RIsque sinon de modifier l'adresse d'un événement existant.
 
-    @NonNull
-    private String intituleAdresse;
+    @NotBlank
+    @Schema(description = "Numéro de voie (facultatif)", example = "15 Ter")
+    private String numero;
 
-    @NonNull
+    @NotBlank
+    @Schema(description = "Nom de la voie", example = "Avenue Victor Hugo", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String rue;
+
+    @NotBlank
+    @Schema(description = "Code postal (5 chiffres)", example = "69002", requiredMode = Schema.RequiredMode.REQUIRED)
     private String codePostal;
 
-    @NonNull
+    @NotBlank
+    @Schema(description = "Ville", example = "Lyon", requiredMode = Schema.RequiredMode.REQUIRED)
     private String ville;
 
-    @NonNull
+    @NotBlank
+    @Schema(description = "Pays", example = "France", requiredMode = Schema.RequiredMode.REQUIRED)
     private String pays;
 }

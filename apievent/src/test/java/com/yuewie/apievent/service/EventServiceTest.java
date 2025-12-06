@@ -5,7 +5,9 @@ import com.yuewie.apievent.dto.constraint.EventFieldForOrderBy;
 import com.yuewie.apievent.dto.constraint.OrderDirection;
 import com.yuewie.apievent.entity.Adresse;
 import com.yuewie.apievent.entity.Event;
+import com.yuewie.apievent.entity.LienEventAdresse;
 import com.yuewie.apievent.mapper.EventMapper;
+import com.yuewie.apievent.mapper.LienEventAdresseMapper;
 import com.yuewie.apievent.repository.*;
 import com.yuewie.apievent.service.impl.EventServiceImpl;
 import jakarta.persistence.EntityNotFoundException;
@@ -47,6 +49,14 @@ class EventServiceTest {
     @Mock
     private EventQueryDSLRepository eventQueryDSLRepository;
 
+    @Mock
+    private AdresseRepository adresseRepository;
+
+    @Mock
+    private LienEventAdresseMapper lienEventAdresseMapper;
+
+    @Mock
+    private LienEventAdresseRepository lienEventAdresseRepository;
 
     @InjectMocks
     private EventServiceImpl eventService;
@@ -61,17 +71,29 @@ class EventServiceTest {
     void setUp() {
         AdresseDto adresseDto = AdresseDto.builder()
                 .id(1L)
-                .intituleAdresse("3 rue du marglier")
+                .numero("3")
+                .rue("rue du marglier")
                 .codePostal("75000")
                 .ville("Paris")
                 .pays("France")
                 .build();
 
+        LienEventAdresseDto lienEventAdresseDto = LienEventAdresseDto.builder()
+                .principal(true)
+                .adresse(adresseDto)
+                .build();
+
         AdresseRequestDto adresseRequestDto = AdresseRequestDto.builder()
-                .intituleAdresse("3 rue du marglier")
+                .numero("3")
+                .rue("rue du marglier")
                 .codePostal("75000")
                 .ville("Paris")
                 .pays("France")
+                .build();
+
+        LienEventAdresseRequestDto lienEventAdresseRequestDto = LienEventAdresseRequestDto.builder()
+                .principal(true)
+                .adresse(adresseRequestDto)
                 .build();
 
         eventDto = new EventDto();
@@ -80,18 +102,19 @@ class EventServiceTest {
         eventDto.setEnd(LocalDateTime.of(2025, 12, 2, 20, 0));
         eventDto.setStart(LocalDateTime.of(2025, 12, 1, 20, 0));
         eventDto.setDescription("Concert");
-        eventDto.setAdresses(Set.of(adresseDto));
+        eventDto.setAdresses(Set.of(lienEventAdresseDto));
 
         eventCreateDto = new EventCreateDto();
         eventCreateDto.setName("Concert");
         eventCreateDto.setEnd(LocalDateTime.of(2025, 12, 2, 20, 0));
         eventCreateDto.setStart(LocalDateTime.of(2025, 12, 1, 20, 0));
         eventCreateDto.setDescription("Concert");
-        eventCreateDto.setAdresses(Set.of(adresseRequestDto));
+        eventCreateDto.setAdresses(Set.of(lienEventAdresseRequestDto));
 
         Adresse adresse = new Adresse();
         adresse.setId(1L);
-        adresse.setIntituleAdresse("3 rue du marglier");
+        adresse.setNumero("3");
+        adresse.setRue("rue du marglier");
         adresse.setCodePostal("75000");
         adresse.setVille("Paris");
         adresse.setPays("France");
@@ -102,7 +125,6 @@ class EventServiceTest {
         event.setEnd(LocalDateTime.of(2025, 12, 2, 20, 0));
         event.setStart(LocalDateTime.of(2025, 12, 1, 20, 0));
         event.setDescription("Concert");
-        event.setAdresses(Set.of(adresse));
 
         lenient().when(eventMapper.toEntity(eventCreateDto)).thenReturn(event);
         lenient().when(eventMapper.toDto(event)).thenReturn(eventDto);
@@ -115,7 +137,8 @@ class EventServiceTest {
         searchCriteria.setName("Concert");
         searchCriteria.setVille("Paris");
         searchCriteria.setCodePostal("75000");
-        searchCriteria.setIntituleAdresse("3 rue du marglier");
+        searchCriteria.setNumero("3");
+        searchCriteria.setRue("rue du marglier");
         searchCriteria.setStartDate("2025-12-01");
         searchCriteria.setStartTime("20:00");
         searchCriteria.setEndDate("2025-12-02");
@@ -247,4 +270,164 @@ class EventServiceTest {
             verify(eventQueryDSLRepository).findAllQueryDsl(searchCriteria);
             verify(eventMapper).toDto(event);
         }
+
+    @Nested
+    @DisplayName("Tests de gestion des adresses")
+    class AddressManagement {
+
+        @Test
+        @DisplayName("Devrait ajouter une adresse à un événement")
+        void shouldAddAdresseToEvent() {
+            // Given
+            Long eventId = 1L;
+            AdresseRequestDto newAdresseRequest = AdresseRequestDto.builder()
+                    .numero("5")
+                    .rue("rue de Lyon")
+                    .codePostal("69000")
+                    .ville("Lyon")
+                    .pays("France")
+                    .build();
+
+            LienEventAdresseRequestDto lienRequest = LienEventAdresseRequestDto.builder()
+                    .principal(false)
+                    .adresse(newAdresseRequest)
+                    .build();
+
+            Adresse newAdresse = new Adresse();
+            newAdresse.setNumero("5");
+            newAdresse.setRue("rue de Lyon");
+
+            LienEventAdresse lien = new LienEventAdresse();
+            lien.setAdresse(newAdresse);
+            lien.setPrincipal(false);
+
+            when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
+            when(lienEventAdresseMapper.toEntity(lienRequest)).thenReturn(lien);
+            when(eventRepository.save(event)).thenReturn(event);
+            when(eventMapper.toDto(event)).thenReturn(eventDto);
+
+            // When
+            EventDto result = eventService.addAdresse(eventId, lienRequest);
+
+            // Then
+            assertThat(result).isNotNull();
+            verify(eventRepository).findById(eventId);
+            verify(lienEventAdresseMapper).toEntity(lienRequest);
+            verify(eventRepository).save(event);
+            verify(eventMapper).toDto(event);
+        }
+
+        @Test
+        @DisplayName("Devrait lever une exception si l'événement n'existe pas lors de l'ajout d'adresse")
+        void shouldThrowException_whenEventNotFoundForAddAdresse() {
+            // Given
+            Long eventId = 999L;
+            AdresseRequestDto adresseRequestDto = AdresseRequestDto.builder()
+                    .numero("123")
+                    .rue("Test")
+                    .codePostal("12345")
+                    .ville("Ville")
+                    .pays("Pays")
+                    .build();
+
+            LienEventAdresseRequestDto lienRequest = LienEventAdresseRequestDto.builder()
+                    .principal(false)
+                    .adresse(adresseRequestDto)
+                    .build();
+
+            when(eventRepository.findById(eventId)).thenReturn(Optional.empty());
+
+            // When & Then
+            assertThatThrownBy(() -> eventService.addAdresse(eventId, lienRequest))
+                    .isInstanceOf(EntityNotFoundException.class);
+            verify(eventRepository).findById(eventId);
+            verify(eventRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Devrait retirer une adresse d'un événement")
+        void shouldRemoveAdresseFromEvent() {
+            // Given
+            Long eventId = 1L;
+            Long adresseId = 1L;
+            Adresse adresseProxy = new Adresse();
+            adresseProxy.setId(adresseId);
+
+            when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
+            when(adresseRepository.getReferenceById(adresseId)).thenReturn(adresseProxy);
+            when(eventRepository.save(event)).thenReturn(event);
+
+            // When
+            eventService.removeAdresse(eventId, adresseId);
+
+            // Then
+            verify(eventRepository).findById(eventId);
+            verify(adresseRepository).getReferenceById(adresseId);
+            verify(eventRepository).save(event);
+        }
+
+        @Test
+        @DisplayName("Devrait lever une exception si l'événement n'existe pas lors de la suppression d'adresse")
+        void shouldThrowException_whenEventNotFoundForRemoveAdresse() {
+            // Given
+            Long eventId = 999L;
+            Long adresseId = 1L;
+
+            when(eventRepository.findById(eventId)).thenReturn(Optional.empty());
+
+            // When & Then
+            assertThatThrownBy(() -> eventService.removeAdresse(eventId, adresseId))
+                    .isInstanceOf(EntityNotFoundException.class);
+            verify(eventRepository).findById(eventId);
+            verify(eventRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Devrait récupérer toutes les adresses d'un événement")
+        void shouldGetAllAdressesOfEvent() {
+            // Given
+            Long eventId = 1L;
+            LienEventAdresseDto lienDto = LienEventAdresseDto.builder()
+                    .principal(true)
+                    .adresse(AdresseDto.builder()
+                            .id(1L)
+                            .numero("3")
+                            .rue("rue du marglier")
+                            .codePostal("75000")
+                            .ville("Paris")
+                            .pays("France")
+                            .build())
+                    .build();
+
+            LienEventAdresse lien = new LienEventAdresse();
+            lien.setPrincipal(true);
+
+            when(eventRepository.existsById(eventId)).thenReturn(true);
+            when(lienEventAdresseRepository.findByEventId(eventId)).thenReturn(List.of(lien));
+            when(lienEventAdresseMapper.toDto(lien)).thenReturn(lienDto);
+
+            // When
+            Set<LienEventAdresseDto> result = eventService.getAdresseByEventId(eventId);
+
+            // Then
+            assertThat(result).isNotNull().hasSize(1);
+            verify(eventRepository).existsById(eventId);
+            verify(lienEventAdresseRepository).findByEventId(eventId);
+            verify(lienEventAdresseMapper).toDto(lien);
+        }
+
+        @Test
+        @DisplayName("Devrait lever une exception si l'événement n'existe pas lors de la récupération des adresses")
+        void shouldThrowException_whenEventNotFoundForGetAdresses() {
+            // Given
+            Long eventId = 999L;
+
+            when(eventRepository.existsById(eventId)).thenReturn(false);
+
+            // When & Then
+            assertThatThrownBy(() -> eventService.getAdresseByEventId(eventId))
+                    .isInstanceOf(EntityNotFoundException.class);
+            verify(eventRepository).existsById(eventId);
+        }
+    }
 }

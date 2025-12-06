@@ -3,6 +3,7 @@ package com.yuewie.apievent.repository.impl;
 import com.yuewie.apievent.dto.EventSearchCriteria;
 import com.yuewie.apievent.entity.Adresse;
 import com.yuewie.apievent.entity.Event;
+import com.yuewie.apievent.entity.LienEventAdresse;
 import com.yuewie.apievent.repository.EventCriteriaApiRepository;
 import com.yuewie.apievent.utils.DateUtils;
 import jakarta.persistence.EntityManager;
@@ -31,7 +32,8 @@ public class EventCriteriaApiRepositoryImpl implements EventCriteriaApiRepositor
         //on utilise pas le cq.select cat on veut prendre toutes les colonnes. ON pourrait l'utiliser si
         // on veut des colonnes spécifiques
         Root<Event> root = cq.from(Event.class);
-        Join<Event, Adresse> adresseJoin = root.joinSet("adresses", JoinType.INNER);
+        Join<Event, LienEventAdresse> lienJoin = root.joinSet("liens", JoinType.INNER);
+        Join<LienEventAdresse, Adresse> adresseJoin = lienJoin.joinSet("adresse", JoinType.INNER);
 
         List<Predicate> predicateList = new ArrayList<>();
         if (eventSearchCriteria.getName() != null && !eventSearchCriteria.getName().isBlank()) {
@@ -45,8 +47,12 @@ public class EventCriteriaApiRepositoryImpl implements EventCriteriaApiRepositor
             predicateList.add(cb.equal(cb.lower(adresseJoin.get("codePostal")), eventSearchCriteria.getCodePostal().toLowerCase()));
         }
 
-        if (eventSearchCriteria.getIntituleAdresse() != null && !eventSearchCriteria.getIntituleAdresse().isBlank()) {
-            predicateList.add(cb.like(cb.lower(adresseJoin.get("intituleAdresse")), "%" + eventSearchCriteria.getIntituleAdresse().toLowerCase() + "%"));
+        if (eventSearchCriteria.getNumero() != null && !eventSearchCriteria.getNumero().isBlank()) {
+            predicateList.add(cb.like(cb.lower(adresseJoin.get("numero")), "%" + eventSearchCriteria.getNumero().toLowerCase() + "%"));
+        }
+
+        if (eventSearchCriteria.getRue() != null && !eventSearchCriteria.getRue().isBlank()) {
+            predicateList.add(cb.like(cb.lower(adresseJoin.get("rue")), "%" + eventSearchCriteria.getRue().toLowerCase() + "%"));
         }
 
         if (eventSearchCriteria.getStartDate() != null && !eventSearchCriteria.getStartDate().isBlank()) {

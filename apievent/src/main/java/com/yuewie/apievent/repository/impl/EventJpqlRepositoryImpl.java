@@ -34,7 +34,7 @@ public class EventJpqlRepositoryImpl implements EventJpqlRepository {
     @Override
     public List<Event> findAllJpql(EventSearchCriteria eventSearchCriteria) {
         Map<String, Object> params = new HashMap<>();
-        StringBuilder jpql = new StringBuilder("Select DISTINCT e FROM Event e JOIN e.adresses a WHERE 1=1");
+        StringBuilder jpql = new StringBuilder("Select DISTINCT e FROM Event e JOIN e.liens l JOIN l.adresse a WHERE 1=1");
 
         if (eventSearchCriteria.getName() != null && !eventSearchCriteria.getName().isBlank()) {
             jpql.append(" AND LOWER(e.name) LIKE LOWER(:name)");
@@ -47,13 +47,18 @@ public class EventJpqlRepositoryImpl implements EventJpqlRepository {
         }
 
         if (eventSearchCriteria.getCodePostal() != null && !eventSearchCriteria.getCodePostal().isBlank()) {
-            jpql.append(" AND LOWER(acodePostal) = LOWER(:codePostal)");
+            jpql.append(" AND LOWER(a.codePostal) = LOWER(:codePostal)");
             params.put("codePostal", eventSearchCriteria.getCodePostal());
         }
 
-        if (eventSearchCriteria.getIntituleAdresse() != null && !eventSearchCriteria.getIntituleAdresse().isBlank()) {
-            jpql.append(" AND LOWER(a.intituleAdresse) LIKE LOWER(:intituleAdresse)");
-            params.put("intituleAdresse", "%" + eventSearchCriteria.getIntituleAdresse() + "%");
+        if (eventSearchCriteria.getNumero() != null && !eventSearchCriteria.getNumero().isBlank()) {
+            jpql.append(" AND LOWER(a.numero) LIKE LOWER(:numero)");
+            params.put("numero", "%" + eventSearchCriteria.getNumero() + "%");
+        }
+
+        if (eventSearchCriteria.getRue() != null && !eventSearchCriteria.getRue().isBlank()) {
+            jpql.append(" AND LOWER(a.rue) LIKE LOWER(:rue)");
+            params.put("rue", "%" + eventSearchCriteria.getRue() + "%");
         }
 
         if (eventSearchCriteria.getStartDate() != null && !eventSearchCriteria.getStartDate().isBlank()){

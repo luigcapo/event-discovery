@@ -3,10 +3,7 @@ package com.yuewie.apievent.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yuewie.apievent.dto.*;
 import com.yuewie.apievent.service.EventService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -15,7 +12,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
 
@@ -43,40 +44,61 @@ class EventControllerTest {
 
     private AdresseRequestDto adresseRequestDto;
 
+    private LienEventAdresseDto lienEventAdresseDto;
+
+    private LienEventAdresseRequestDto lienEventAdresseRequestDto;
+
+    private static Clock fixedClock;
+
+    @BeforeAll
+    static void setupClock() {
+        Instant now = Instant.now();
+        fixedClock = Clock.fixed(now, ZoneId.systemDefault());
+    }
+
     @BeforeEach
     void setUp() {
-
         adresseDto = AdresseDto.builder()
                 .id(1L)
-                .intituleAdresse("3 rue du marglier")
+                .numero("3")
+                .rue("rue du marglier")
                 .codePostal("75000")
                 .ville("Paris")
                 .pays("France")
                 .build();
 
+        lienEventAdresseDto = LienEventAdresseDto.builder()
+                .principal(true)
+                .adresse(adresseDto)
+                .build();
+
         adresseRequestDto = AdresseRequestDto.builder()
-                .intituleAdresse("3 rue du marglier")
+                .numero("3")
+                .rue("rue du marglier")
                 .codePostal("75000")
                 .ville("Paris")
                 .pays("France")
+                .build();
+
+        lienEventAdresseRequestDto = LienEventAdresseRequestDto.builder()
+                .principal(true)
+                .adresse(adresseRequestDto)
                 .build();
 
         eventDto = new EventDto();
         eventDto.setId(1L);
         eventDto.setName("Concert");
         eventDto.setDescription("A live concert");
-        eventDto.setStart(LocalDateTime.of(2025, 12, 1, 20, 0));
-        eventDto.setEnd(LocalDateTime.of(2025, 12, 2, 20, 0));
-        eventDto.setAdresses(Set.of(adresseDto));
+        eventDto.setStart(LocalDateTime.now(fixedClock).plusDays(1).truncatedTo(ChronoUnit.SECONDS));
+        eventDto.setEnd(LocalDateTime.now(fixedClock).plusDays(2).truncatedTo(ChronoUnit.SECONDS));
+        eventDto.setAdresses(Set.of(lienEventAdresseDto));
 
         eventCreateDto = new EventCreateDto();
         eventCreateDto.setName("Concert");
         eventCreateDto.setDescription("A live concert");
-        eventCreateDto.setStart(LocalDateTime.of(2025, 12, 1, 20, 0));
-        eventCreateDto.setEnd(LocalDateTime.of(2025, 12, 2, 20, 0));
-        eventCreateDto.setAdresses(Set.of(adresseRequestDto));
-
-
+        eventCreateDto.setStart(LocalDateTime.now(fixedClock).plusDays(1).truncatedTo(ChronoUnit.SECONDS));
+        eventCreateDto.setEnd(LocalDateTime.now(fixedClock).plusDays(2).truncatedTo(ChronoUnit.SECONDS));
+        eventCreateDto.setAdresses(Set.of(lienEventAdresseRequestDto));
 
     }
 
@@ -129,11 +151,12 @@ class EventControllerTest {
             savedEventDto.setId(1L); // Simule l'ID généré par la base de données
             savedEventDto.setName(eventCreateDto.getName());
             savedEventDto.setDescription(eventCreateDto.getDescription());
-            savedEventDto.setStart(LocalDateTime.of(2025, 12, 1, 20, 0));
-            savedEventDto.setEnd(LocalDateTime.of(2025, 12, 2, 20, 0));
-            savedEventDto.setAdresses(Set.of(adresseDto));
+            savedEventDto.setStart(eventCreateDto.getStart());
+            savedEventDto.setEnd(eventCreateDto.getEnd());
+            savedEventDto.setAdresses(Set.of(lienEventAdresseDto));
+            savedEventDto.setAdressePrincipale(lienEventAdresseDto.getAdresse());
             // Given
-            when(eventService.createEvent(eventCreateDto)).thenReturn(savedEventDto);
+            when(eventService.createEvent(any(EventCreateDto.class))).thenReturn(savedEventDto);
 
             // When & Then
             mockMvc.perform(post("/api/v1/events")
@@ -142,7 +165,7 @@ class EventControllerTest {
                     .andExpect(status().isCreated())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.id").value(savedEventDto.getId()))
-                    .andExpect(jsonPath("$.name").value(eventDto.getName()));
+                    .andExpect(jsonPath("$.name").value(savedEventDto.getName()));
 
             verify(eventService).createEvent(eventCreateDto);
         }
@@ -234,6 +257,8 @@ class EventControllerTest {
             mockMvc.perform(get("/api/v1/events/search/spec")
                             .param("name", "Concert")
                             .param("ville", "Paris")
+                            .queryParam("numero","3")
+                            .queryParam("rue","rue du marglier")
                             .param("codePostal", "75000")
                             .param("startDate", "2025-12-01")
                             .param("startTime", "20:00")
@@ -241,7 +266,7 @@ class EventControllerTest {
                             .param("endTime", "22:00")
                             .param("orderBy", "id")
                             .param("orderDirection", "ASC")
-                            .param("pageNumber", "0")
+                            .param("pageNumber", "1")
                             .param("pageSize", "10")
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
@@ -264,6 +289,8 @@ class EventControllerTest {
             // When & Then
             mockMvc.perform(get("/api/v1/events/search/jpql")
                             .queryParam("name", "Concert")
+                            .queryParam("numero","3")
+                            .queryParam("rue","rue du marglier")
                             .queryParam("ville", "Paris")
                             .queryParam("codePostal", "75000")
                             .queryParam("startDate", "2025-12-01")
@@ -272,7 +299,7 @@ class EventControllerTest {
                             .queryParam("endTime", "22:00")
                             .queryParam("orderBy", "id")
                             .queryParam("orderDirection", "ASC")
-                            .queryParam("pageNumber", "0")
+                            .queryParam("pageNumber", "1")
                             .queryParam("pageSize", "10")
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
@@ -343,6 +370,108 @@ class EventControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$[0].id").value(eventDto.getId()))
                     .andExpect(jsonPath("$[0].name").value(eventDto.getName()));
+        }
+    }
+
+    @Nested
+    @DisplayName("Tests for Address Management")
+    class AddressManagement {
+
+        @Test
+        @DisplayName("Devrait ajouter une adresse à un événement")
+        void shouldAddAdresseToEvent() throws Exception {
+            // Given
+            Long eventId = 1L;
+            AdresseRequestDto newAdresse = AdresseRequestDto.builder()
+                    .numero("5")
+                    .rue("rue de Lyon")
+                    .codePostal("69000")
+                    .ville("Lyon")
+                    .pays("France")
+                    .build();
+
+            LienEventAdresseRequestDto lienRequest = LienEventAdresseRequestDto.builder()
+                    .principal(false)
+                    .adresse(newAdresse)
+                    .build();
+
+            when(eventService.addAdresse(eventId, lienRequest)).thenReturn(eventDto);
+
+            // When & Then
+            mockMvc.perform(post("/api/v1/events/{id}/adresses", eventId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(lienRequest)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.id").value(eventDto.getId()))
+                    .andExpect(jsonPath("$.name").value(eventDto.getName()));
+
+            verify(eventService).addAdresse(eventId, lienRequest);
+        }
+
+        @Test
+        @DisplayName("Devrait retourner 400 Bad Request pour un ID d'événement invalide lors de l'ajout d'adresse")
+        void shouldReturnBadRequest_whenAddAdresseWithInvalidEventId() throws Exception {
+            // Given
+            Long invalidId = -1L;
+            LienEventAdresseRequestDto lienRequest = LienEventAdresseRequestDto.builder()
+                    .principal(false)
+                    .adresse(adresseRequestDto)
+                    .build();
+
+            // When & Then
+            mockMvc.perform(post("/api/v1/events/{id}/adresses", invalidId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(lienRequest)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.name()))
+                    .andExpect(jsonPath("$.message").value("Validation échouée"));
+        }
+
+        @Test
+        @DisplayName("Devrait retirer une adresse d'un événement")
+        void shouldRemoveAdresseFromEvent() throws Exception {
+            // Given
+            Long eventId = 1L;
+            Long adresseId = 1L;
+            doNothing().when(eventService).removeAdresse(eventId, adresseId);
+
+            // When & Then
+            mockMvc.perform(delete("/api/v1/events/{id}/adresses/{adresseId}", eventId, adresseId))
+                    .andExpect(status().isNoContent());
+
+            verify(eventService).removeAdresse(eventId, adresseId);
+        }
+
+        @Test
+        @DisplayName("Devrait retourner 400 Bad Request pour un ID invalide lors de la suppression d'adresse")
+        void shouldReturnBadRequest_whenRemoveAdresseWithInvalidIds() throws Exception {
+            // Given
+            Long invalidEventId = -1L;
+            Long adresseId = 1L;
+
+            // When & Then
+            mockMvc.perform(delete("/api/v1/events/{id}/adresses/{adresseId}", invalidEventId, adresseId))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.name()))
+                    .andExpect(jsonPath("$.message").value("Validation échouée"));
+        }
+
+        @Test
+        @DisplayName("Devrait retourner 400 Bad Request pour un ID d'adresse invalide lors de la suppression")
+        void shouldReturnBadRequest_whenRemoveAdresseWithInvalidAdresseId() throws Exception {
+            // Given
+            Long eventId = 1L;
+            Long invalidAdresseId = -1L;
+
+            // When & Then
+            mockMvc.perform(delete("/api/v1/events/{id}/adresses/{adresseId}", eventId, invalidAdresseId))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.name()))
+                    .andExpect(jsonPath("$.message").value("Validation échouée"));
         }
     }
 }

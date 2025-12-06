@@ -1,10 +1,8 @@
 spring:
-  profiles:
-    active: dev
   datasource:
       # j'utilise la syntaxe ${NOM_DE_LA_VARIABLE:valeur_par_defaut}
-      url: jdbc:postgresql://postgres:5432/${DB_NAME:event}
-      username: ${DB_USER:postgres}
+      url: jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:event}
+      username: ${DB_USER:event}
       password: ${DB_PASSWORD:monchichi}
   jpa:
     hibernate:
@@ -19,20 +17,18 @@ spring:
     locations:
       - classpath:db/migration/old
       - classpath:db/migration/new
-    user: ${DB_USER:postgres}
+    user: ${DB_USER:event}
     password: ${DB_PASSWORD:monchichi}
   application:
     name: api-event
   kafka:
-    bootstrap-servers: kafka1:9092,kafka2:9092,kafka3:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092,localhost:9093,localhost:9094}
     producer:
-      retries: 3
+      retries: 10
       acks: all
       properties:
         enable.idempotence: true
-        retry.backoff.ms: 2000 # Temps d'attente entre les tentatives de réessai
-
-
+        retry.backoff.ms: 2000
 management:
   tracing:
     enabled: true
@@ -43,12 +39,14 @@ management:
     tracing:
       endpoint: http://jaeger:4318/v1/traces
 logging:
-    level:
-        org.hibernate.SQL: INFO
-        org.hibernate.type.descriptor.sql.BasicBinder: ERROR
-        org.hibernate.type.descriptor.sql.BasicExtractor: ERROR
-        org.springdoc: INFO
-        level.io.opentelemetry.exporter.otlp: INFO
+  file:
+    path: ${APPLICATION_LOG_PATH:../logs/apievent}
+  level:
+      org.hibernate.SQL: INFO
+      org.hibernate.type.descriptor.sql.BasicBinder: ERROR
+      org.hibernate.type.descriptor.sql.BasicExtractor: ERROR
+      org.springdoc: INFO
+      level.io.opentelemetry.exporter.otlp: INFO
 api:
   error:
     include-debug-message: true

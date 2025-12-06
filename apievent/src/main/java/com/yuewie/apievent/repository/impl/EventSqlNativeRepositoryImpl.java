@@ -36,7 +36,8 @@ public class EventSqlNativeRepositoryImpl implements EventSqlNativeRepository {
         // Jointure si des critères sur l'adresse sont présents ou si on trie par un champ d'adresse
         boolean joinAdresse = (eventSearchCriteria.getVille() != null && !eventSearchCriteria.getVille().isBlank()) ||
                 (eventSearchCriteria.getCodePostal() != null && !eventSearchCriteria.getCodePostal().isBlank()) ||
-                (eventSearchCriteria.getIntituleAdresse() != null && !eventSearchCriteria.getIntituleAdresse().isBlank());
+                (eventSearchCriteria.getNumero() != null && !eventSearchCriteria.getNumero().isBlank()) ||
+                (eventSearchCriteria.getRue() != null && !eventSearchCriteria.getRue().isBlank());
         if (joinAdresse) {
             sql.append(" JOIN lien_adresse_event l ON l.event_id = e.id JOIN adresse a ON l.adresse_id = a.id ");
         }
@@ -58,9 +59,14 @@ public class EventSqlNativeRepositoryImpl implements EventSqlNativeRepository {
             params.add(eventSearchCriteria.getCodePostal());
         }
 
-        if (eventSearchCriteria.getIntituleAdresse() != null && !eventSearchCriteria.getIntituleAdresse().isBlank()) {
-            whereClause.append(" AND LOWER(a.intitule_adresse) LIKE LOWER(?) ");
-            params.add("%" + eventSearchCriteria.getIntituleAdresse() + "%");
+        if (eventSearchCriteria.getNumero() != null && !eventSearchCriteria.getNumero().isBlank()) {
+            whereClause.append(" AND LOWER(a.numero) LIKE LOWER(?) ");
+            params.add("%" + eventSearchCriteria.getNumero() + "%");
+        }
+
+        if (eventSearchCriteria.getRue() != null && !eventSearchCriteria.getRue().isBlank()) {
+            whereClause.append(" AND LOWER(a.rue) LIKE LOWER(?) ");
+            params.add("%" + eventSearchCriteria.getRue() + "%");
         }
 
         if (eventSearchCriteria.getStartDate() != null && !eventSearchCriteria.getStartDate().isBlank()) {

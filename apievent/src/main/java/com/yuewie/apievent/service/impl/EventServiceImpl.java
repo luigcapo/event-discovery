@@ -3,10 +3,13 @@ package com.yuewie.apievent.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yuewie.apievent.dto.*;
+import com.yuewie.apievent.entity.Adresse;
 import com.yuewie.apievent.entity.Event;
+import com.yuewie.apievent.entity.LienEventAdresse;
 import com.yuewie.apievent.entity.OutboxEvent;
 import com.yuewie.apievent.helper.KafkaPayloadHelper;
 import com.yuewie.apievent.mapper.EventMapper;
+import com.yuewie.apievent.mapper.LienEventAdresseMapper;
 import com.yuewie.apievent.repository.*;
 import com.yuewie.apievent.repository.impl.EventSpecifications;
 import com.yuewie.apievent.service.EventService;
@@ -26,6 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,6 +48,9 @@ public class EventServiceImpl implements EventService {
     private final EventCriteriaApiRepository eventCriteriaApiRepository;
     private final KafkaPayloadHelper kafkaPayloadHelper;
     private final OutboxEventRepository outboxEventRepository;
+    private final LienEventAdresseMapper lienEventAdresseMapper;
+    private final AdresseRepository adresseRepository;
+    private final LienEventAdresseRepository lienEventAdresseRepository;
 
     @Value("${app.kafka.topic.eventCreated}")
     private String eventCreatedTopic;
@@ -54,7 +62,8 @@ public class EventServiceImpl implements EventService {
     public EventServiceImpl(EventMapper eventMapper, EventRepository eventRepository, EventJooqRepository eventJooqRepository,
                             EventJpqlRepository eventJpqlRepository, EventSqlNativeRepository eventSqlNativeRepository,
                             EventQueryDSLRepository eventQueryDSLRepository, EventCriteriaApiRepository eventCriteriaApiRepository,
-                            KafkaPayloadHelper kafkaPayloadHelper, OutboxEventRepository outboxEventRepository) {
+                            KafkaPayloadHelper kafkaPayloadHelper, OutboxEventRepository outboxEventRepository, LienEventAdresseMapper lienEventAdresseMapper,
+                            AdresseRepository adresseRepository, LienEventAdresseRepository lienEventAdresseRepository) {
         this.eventMapper = eventMapper;
         this.eventRepository = eventRepository;
         this.eventJooqRepository = eventJooqRepository;
@@ -64,6 +73,9 @@ public class EventServiceImpl implements EventService {
         this.eventCriteriaApiRepository = eventCriteriaApiRepository;
         this.kafkaPayloadHelper = kafkaPayloadHelper;
         this.outboxEventRepository = outboxEventRepository;
+        this.lienEventAdresseMapper = lienEventAdresseMapper;
+        this.adresseRepository = adresseRepository;
+        this.lienEventAdresseRepository = lienEventAdresseRepository;
     }
 
     @Transactional(readOnly = true)
@@ -131,7 +143,7 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + eventId));
         Event updated = eventMapper.toEntity(eventDto);
         updated.setId(eventId); // Assure qu'on veut faire une mise à jour de l'événement existant
-        updated.setAdresses(eventExisted.getAdresses()); // Conserve les adresses existantes
+        updated.setLiens(eventExisted.getLiens()); // Conserve les adresses existantes
         return eventMapper.toDto(eventRepository.save(updated));
     }
 
@@ -197,6 +209,51 @@ public class EventServiceImpl implements EventService {
         );
         outboxEventRepository.save(outboxEvent);
         return createdEventDto;
+    }
+
+    @Override
+    public EventDto addAdresse(Long eventId, LienEventAdresseRequestDto dto) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + eventId));
+        LienEventAdresse lien = lienEventAdresseMapper.toEntity(dto);
+        Adresse adresseEntrante = lien.getAdresse();
+        if (adresseEntrante.getId() == null) {
+
+            // Recherche par contenu (Structure fine)
+            Optional<Adresse> existante = adresseRepository.findByNumeroAndRueAndCodePostalAndVilleAndPays(
+                    adresseEntrante.getNumero(),
+                    adresseEntrante.getRue(),
+                    adresseEntrante.getCodePostal(),
+                    adresseEntrante.getVille(),
+                    adresseEntrante.getPays()
+            );
+            lien.setAdresse(existante.orElse(adresseEntrante));
+        }
+        else {
+            Adresse adresseExistante = adresseRepository.findById(adresseEntrante.getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Adresse inexistante (ID: " + adresseEntrante.getId() + ")"));
+
+            lien.setAdresse(adresseExistante);
+        }
+        event.addLien(lien);
+        return eventMapper.toDto(eventRepository.save(event));
+    }
+
+    @Override
+    public void removeAdresse(Long eventId, Long adresseId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + eventId));
+        Adresse adresseProxy = adresseRepository.getReferenceById(adresseId);
+        event.removeLien(adresseProxy);
+        eventRepository.save(event);
+    }
+
+    @Override
+    public Set<LienEventAdresseDto> getAdresseByEventId(Long eventId) {
+        if(!eventRepository.existsById(eventId)){
+            throw new EntityNotFoundException("Event not found with ID: " + eventId);
+        }
+        return lienEventAdresseRepository.findByEventId(eventId).stream().map(lienEventAdresseMapper::toDto).collect(Collectors.toSet());
     }
 
 

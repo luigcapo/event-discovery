@@ -3,9 +3,12 @@ package com.yuewie.apievent.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Objects;
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
+@ToString
 @Entity
 @Table(name = "adresse")
 @NoArgsConstructor // Required for JPA
@@ -16,8 +19,11 @@ public class Adresse {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "intituleAdresse", nullable = false)
-    private String intituleAdresse;
+    @Column(name = "numero", length = 10)
+    private String numero; // Ex: "10", "12 Bis"
+
+    @Column(name = "rue", nullable = false)
+    private String rue;
 
     @Column(name = "codePostal", nullable = false)
     private String codePostal;
@@ -28,8 +34,23 @@ public class Adresse {
     @Column(name="pays", nullable = false)
     private String pays;
 
-    @ManyToMany(mappedBy = "adresses")
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    Set<Event> events;
+
+//    Enlever car risque de pb de perf si par exemple 10000 event dans l'année pour une adresse. Si besoin faire une requete avec pagination
+//    @OneToMany(mappedBy = "adresse")
+//    @ToString.Exclude
+//    @EqualsAndHashCode.Exclude
+//    private Set<LienAdresseEvent> events = new HashSet<>();
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Adresse adresse)) return false;
+        return Objects.equals(getId(), adresse.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+
 }

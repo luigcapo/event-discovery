@@ -3,6 +3,7 @@ package com.yuewie.apievent.service;
 import com.yuewie.apievent.dto.*;
 
 import java.util.List;
+import java.util.Set;
 
 public interface EventService {
     List<EventDto> findAllEvent();
@@ -24,4 +25,10 @@ public interface EventService {
     EventDto getEvent(Long id);
 
     EventDto createEventWithEnvoieKafka(EventCreateDto eventDto);
+
+    EventDto addAdresse(Long eventId, LienEventAdresseRequestDto dto);
+
+    void removeAdresse(Long eventId, Long adresseId);
+
+    Set<LienEventAdresseDto> getAdresseByEventId(Long eventId);
 }

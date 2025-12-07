@@ -7,7 +7,6 @@ import com.yuewie.apievent.utils.DateUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
-import org.hibernate.type.descriptor.DateTimeUtils;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;

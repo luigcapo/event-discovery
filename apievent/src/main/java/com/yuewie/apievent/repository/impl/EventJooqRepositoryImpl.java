@@ -3,18 +3,11 @@ package com.yuewie.apievent.repository.impl;
 import com.yuewie.apievent.dto.EventSearchCriteria;
 import com.yuewie.apievent.entity.Event;
 import com.yuewie.apievent.repository.EventJooqRepository;
-import com.yuewie.apievent.utils.DateUtils;
 import org.jooq.DSLContext;
-import org.jooq.Query;
-import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 
 @Repository

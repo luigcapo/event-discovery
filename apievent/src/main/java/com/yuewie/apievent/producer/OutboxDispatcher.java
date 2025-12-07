@@ -21,7 +21,7 @@ public class OutboxDispatcher {
         this.outboxEventRepository = outboxEventRepository;
     }
 
-    @Scheduled(fixedDelay = 100000)
+    @Scheduled(fixedDelayString = "${app.outbox.dispatch.delay-ms:10000}")
     @Transactional
     public void dispatchEvents() {
         List<OutboxEvent> unsentEvent = outboxEventRepository.findByProcessedFalse();

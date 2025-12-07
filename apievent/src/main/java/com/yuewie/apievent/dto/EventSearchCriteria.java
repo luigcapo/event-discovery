@@ -34,28 +34,28 @@ public class EventSearchCriteria {
 
     @Pattern(
             regexp = "^\\d{4}-\\d{2}-\\d{2}$",
-            message = "startDate doit respecter le format yyyy‑MM‑dd"
+            message = "{search.date.format}"
     )
     @Schema(description = "Date de début minimum (Format: yyyy-MM-dd)", example = "2025-07-01")
     private String startDate;
 
     @Pattern(
             regexp = "^([01]\\d|2[0-3]):[0-5]\\d$",
-            message = "startTime doit respecter le format HH:mm (0–23:59)"
+            message = "{search.time.format}"
     )
     @Schema(description = "Heure de début minimum (Format: HH:mm)", example = "18:00")
     private String startTime;
 
     @Pattern(
             regexp = "^\\d{4}-\\d{2}-\\d{2}$",
-            message = "endDate doit respecter le format yyyy‑MM‑dd"
+            message = "{search.end.date.format}"
     )
     @Schema(description = "Date de fin maximum (Format: yyyy-MM-dd)", example = "2025-07-31")
     private String endDate;
 
     @Pattern(
             regexp = "^([01]\\d|2[0-3]):[0-5]\\d$",
-            message = "endTime doit respecter le format HH:mm (0–23:59)"
+            message = "{search.end.time.format}"
     )
     @Schema(description = "Heure de fin maximum (Format: HH:mm)", example = "23:59")
     private String endTime;
@@ -66,12 +66,12 @@ public class EventSearchCriteria {
     @Schema(description = "Direction du tri (ASC/DESC)", defaultValue = "ASC")
     private OrderDirection orderDirection = OrderDirection.ASC;
 
-    @Min(value = 1, message = "La page doit commencer à 1")
+    @Min(value = 1, message = "{search.page.min}")
     @Schema(description = "Numéro de la page (commence à 1)", defaultValue = "1", minimum = "1")
     private int pageNumber = 1;
 
-    @Min(value = 1, message = "La taille de page doit être au moins 1")
-    @Max(value = 100, message = "La taille de page est limitée à 100")  // Sécurité anti-DoS
+    @Min(value = 1, message = "{search.pagesize.min}")
+    @Max(value = 100, message = "{search.pagesize.max}")  // Sécurité anti-DoS
     @Schema(description = "Nombre d'éléments par page", defaultValue = "10", maximum = "100")
     private int pageSize = 10;
 }

@@ -45,12 +45,12 @@ public class Adresse {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Adresse adresse)) return false;
-        return Objects.equals(getId(), adresse.getId());
+        return getId() != null && Objects.equals(getId(), adresse.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return getClass().hashCode();
     }
 
 }

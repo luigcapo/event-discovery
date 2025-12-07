@@ -36,11 +36,14 @@ public class LienEventAdresse {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof LienEventAdresse that)) return false;
-        return Objects.equals(id, that.id);
+        if (this.id != null && this.id.getEventId() != null && this.id.getAdresseId() != null) {
+            return Objects.equals(this.id, that.id);
+        }
+        return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return getClass().hashCode();
     }
 }

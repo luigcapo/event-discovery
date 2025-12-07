@@ -58,6 +58,9 @@ class EventServiceTest {
     @Mock
     private LienEventAdresseRepository lienEventAdresseRepository;
 
+    @Mock
+    private com.yuewie.apievent.helper.MessageHelper messageHelper;
+
     @InjectMocks
     private EventServiceImpl eventService;
 
@@ -128,6 +131,14 @@ class EventServiceTest {
 
         lenient().when(eventMapper.toEntity(eventCreateDto)).thenReturn(event);
         lenient().when(eventMapper.toDto(event)).thenReturn(eventDto);
+
+        // Mock MessageHelper responses
+        lenient().when(messageHelper.get("event.dto.null")).thenReturn("eventDto cannot be null");
+        lenient().when(messageHelper.get("event.update.dto.null")).thenReturn("eventUpdateDto cannot be null");
+        lenient().when(messageHelper.get(eq("event.not.found"), anyLong())).thenAnswer(invocation ->
+            "Event not found with ID: " + invocation.getArgument(1));
+        lenient().when(messageHelper.get(eq("event.adresse.not.found"), anyLong())).thenAnswer(invocation ->
+            "Adresse inexistante (ID: " + invocation.getArgument(1) + ")");
 
         searchCriteria = new EventSearchCriteria();
         searchCriteria.setPageNumber(0);

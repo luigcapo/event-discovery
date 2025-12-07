@@ -8,6 +8,7 @@ import com.yuewie.apievent.entity.Event;
 import com.yuewie.apievent.entity.LienEventAdresse;
 import com.yuewie.apievent.entity.OutboxEvent;
 import com.yuewie.apievent.helper.KafkaPayloadHelper;
+import com.yuewie.apievent.helper.MessageHelper;
 import com.yuewie.apievent.mapper.EventMapper;
 import com.yuewie.apievent.mapper.LienEventAdresseMapper;
 import com.yuewie.apievent.repository.*;
@@ -51,6 +52,7 @@ public class EventServiceImpl implements EventService {
     private final LienEventAdresseMapper lienEventAdresseMapper;
     private final AdresseRepository adresseRepository;
     private final LienEventAdresseRepository lienEventAdresseRepository;
+    private final MessageHelper messageHelper;
 
     @Value("${app.kafka.topic.eventCreated}")
     private String eventCreatedTopic;
@@ -63,7 +65,7 @@ public class EventServiceImpl implements EventService {
                             EventJpqlRepository eventJpqlRepository, EventSqlNativeRepository eventSqlNativeRepository,
                             EventQueryDSLRepository eventQueryDSLRepository, EventCriteriaApiRepository eventCriteriaApiRepository,
                             KafkaPayloadHelper kafkaPayloadHelper, OutboxEventRepository outboxEventRepository, LienEventAdresseMapper lienEventAdresseMapper,
-                            AdresseRepository adresseRepository, LienEventAdresseRepository lienEventAdresseRepository) {
+                            AdresseRepository adresseRepository, LienEventAdresseRepository lienEventAdresseRepository, MessageHelper messageHelper) {
         this.eventMapper = eventMapper;
         this.eventRepository = eventRepository;
         this.eventJooqRepository = eventJooqRepository;
@@ -76,6 +78,7 @@ public class EventServiceImpl implements EventService {
         this.lienEventAdresseMapper = lienEventAdresseMapper;
         this.adresseRepository = adresseRepository;
         this.lienEventAdresseRepository = lienEventAdresseRepository;
+        this.messageHelper = messageHelper;
     }
 
     @Transactional(readOnly = true)
@@ -123,7 +126,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventDto createEvent(EventCreateDto eventDto) {
-        Objects.requireNonNull(eventDto, "eventDto cannot be null");
+        Objects.requireNonNull(eventDto, messageHelper.get("event.dto.null"));
         Event event = eventMapper.toEntity(eventDto);
         Event createdEvent = eventRepository.save(event);
         return eventMapper.toDto(createdEvent);
@@ -138,9 +141,9 @@ public class EventServiceImpl implements EventService {
      */
     @Override
     public EventDto updateEvent(Long eventId, EventUpdateDto eventDto) {
-        Objects.requireNonNull(eventDto, "eventDto cannot be null");
+        Objects.requireNonNull(eventDto, messageHelper.get("event.dto.null"));
         Event eventExisted = eventRepository.findById(eventId)
-                .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + eventId));
+                .orElseThrow(() -> new EntityNotFoundException(messageHelper.get("event.not.found", eventId)));
         Event updated = eventMapper.toEntity(eventDto);
         updated.setId(eventId); // Assure qu'on veut faire une mise à jour de l'événement existant
         updated.setLiens(eventExisted.getLiens()); // Conserve les adresses existantes
@@ -156,9 +159,9 @@ public class EventServiceImpl implements EventService {
      */
     @Override
     public EventDto patchEvent(Long eventId, EventPatchDto eventPatchDto) {
-        Objects.requireNonNull(eventPatchDto, "eventUpdateDto cannot be null");
+        Objects.requireNonNull(eventPatchDto, messageHelper.get("event.update.dto.null"));
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + eventId));
+                .orElseThrow(() -> new EntityNotFoundException(messageHelper.get("event.not.found", eventId)));
 
         eventMapper.updateEntityFromDto(eventPatchDto, event); // MapStruct applique uniquement les champs non-nuls
 
@@ -169,7 +172,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public void deleteEvent(Long eventId) {
         if (!eventRepository.existsById(eventId)) {
-            throw new EntityNotFoundException("Event " + eventId + " not found");
+            throw new EntityNotFoundException(messageHelper.get("event.not.found", eventId));
         }
         eventRepository.deleteById(eventId);
     }
@@ -177,7 +180,7 @@ public class EventServiceImpl implements EventService {
     @Transactional(readOnly = true)
     @Override
     public EventDto getEvent(Long id) {
-        return eventRepository.findById(id).map(eventMapper::toDto).orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + id));
+        return eventRepository.findById(id).map(eventMapper::toDto).orElseThrow(() -> new EntityNotFoundException(messageHelper.get("event.not.found", id)));
     }
 
     @Override
@@ -214,7 +217,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventDto addAdresse(Long eventId, LienEventAdresseRequestDto dto) {
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + eventId));
+                .orElseThrow(() -> new EntityNotFoundException(messageHelper.get("event.not.found", eventId)));
         LienEventAdresse lien = lienEventAdresseMapper.toEntity(dto);
         Adresse adresseEntrante = lien.getAdresse();
         if (adresseEntrante.getId() == null) {
@@ -231,7 +234,7 @@ public class EventServiceImpl implements EventService {
         }
         else {
             Adresse adresseExistante = adresseRepository.findById(adresseEntrante.getId())
-                    .orElseThrow(() -> new EntityNotFoundException("Adresse inexistante (ID: " + adresseEntrante.getId() + ")"));
+                    .orElseThrow(() -> new EntityNotFoundException(messageHelper.get("event.adresse.not.found", adresseEntrante.getId())));
 
             lien.setAdresse(adresseExistante);
         }
@@ -242,7 +245,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public void removeAdresse(Long eventId, Long adresseId) {
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + eventId));
+                .orElseThrow(() -> new EntityNotFoundException(messageHelper.get("event.not.found", eventId)));
         Adresse adresseProxy = adresseRepository.getReferenceById(adresseId);
         event.removeLien(adresseProxy);
         eventRepository.save(event);
@@ -251,7 +254,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public Set<LienEventAdresseDto> getAdresseByEventId(Long eventId) {
         if(!eventRepository.existsById(eventId)){
-            throw new EntityNotFoundException("Event not found with ID: " + eventId);
+            throw new EntityNotFoundException(messageHelper.get("event.not.found", eventId));
         }
         return lienEventAdresseRepository.findByEventId(eventId).stream().map(lienEventAdresseMapper::toDto).collect(Collectors.toSet());
     }

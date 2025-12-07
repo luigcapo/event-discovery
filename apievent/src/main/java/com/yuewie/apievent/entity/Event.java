@@ -40,16 +40,6 @@ public class Event {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<LienEventAdresse> liens = new HashSet<>();
 
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof Event event)) return false;
-        return Objects.equals(id, event.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
 
     public void addLien(LienEventAdresse lien) {
         lien.setEvent(this); // On recolle le parent (indispensable avec le Mapper)
@@ -60,6 +50,17 @@ public class Event {
         // On cherche le lien qui pointe vers cette adresse et on le dégage
         // C'est 100% sûr car on compare l'ID de l'adresse (fiable)
         this.liens.removeIf(lien -> lien.getAdresse().equals(adresse));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Event event)) return false;
+        return id != null && Objects.equals(id, event.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 
 

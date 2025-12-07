@@ -17,7 +17,7 @@ import java.util.Set;
 )
 public class EventPatchDto {
 
-    @Size(min = 3, message = "Le nom de l'événement ne peut être inférieur à 3 caractères")
+    @Size(min = 3, message = "{event.name.size}")
     @Schema(example = "Concert Rock", description = "Nouveau nom de l'événement(optionnel)")
     private String name;
 

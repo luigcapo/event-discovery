@@ -11,7 +11,7 @@ public class LienEventAdresseRequestDto {
 
     private boolean principal;
 
-    @NotNull(message = "L'adresse est obligatoire")
+    @NotNull(message = "{lien.adresse.not.null}")
     @Valid
     private AdresseRequestDto adresse;
 }

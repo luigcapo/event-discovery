@@ -21,7 +21,7 @@ import java.util.Set;
 public class EventUpdateDto {
 
     @NotBlank
-    @Size(min = 3, message = "Le nom de l'événement ne peut êtrer inférieur à 3 caractères")
+    @Size(min = 3, message = "{event.name.size}")
     @Schema(description = "Nouveau nom de l'événement", example = "Gala de Charité (Reporté)", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 

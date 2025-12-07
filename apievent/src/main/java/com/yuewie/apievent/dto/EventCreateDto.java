@@ -17,7 +17,7 @@ import java.util.Set;
 public class EventCreateDto {
 
     @NotNull
-    @Size(min = 3, message = "Le nom de l'événement ne peut êtrer inférieur à 3 caractères")
+    @Size(min = 3, message = "{event.name.size}")
     @Schema(description = "Nom de l'événement", example = "Gala de Charité", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
@@ -25,7 +25,7 @@ public class EventCreateDto {
     private String description;
 
     @NotNull
-    @FutureOrPresent(message = "La date de début ne peut pas être dans le passé")
+    @FutureOrPresent(message = "{event.start.future}")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
     @Schema(description = "Date de début (doit être future)", example = "25-12-2025 20:00:00", type = "string", pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime start;
@@ -35,7 +35,7 @@ public class EventCreateDto {
     @Schema(description = "Date de fin", example = "26-12-2025 04:00:00", type = "string", pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime end;
 
-    @NotEmpty(message = "L'événement doit contenir au moins une adresse")
+    @NotEmpty(message = "{event.adresses.not.empty}")
     @Schema(description = "Liste des adresses initiales de l'événement")
     private Set<@Valid LienEventAdresseRequestDto> adresses;
 }

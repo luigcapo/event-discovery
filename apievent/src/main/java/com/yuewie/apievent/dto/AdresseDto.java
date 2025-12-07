@@ -1,8 +1,6 @@
 package com.yuewie.apievent.dto;
 
-import com.yuewie.apievent.entity.Event;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;

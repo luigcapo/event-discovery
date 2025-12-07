@@ -16,9 +16,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Repository
 public class EventQueryDSLRepositoryImpl implements EventQueryDSLRepository {

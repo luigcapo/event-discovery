@@ -26,9 +26,12 @@ spring:
     producer:
       retries: 10
       acks: all
+      batch-size: 32768
       properties:
         enable.idempotence: true
         retry.backoff.ms: 2000
+        linger.ms: 5                  # attend jusqu'à 5 ms pour regrouper
+        compression.type: lz4
 management:
   tracing:
     enabled: true
@@ -60,3 +63,6 @@ app:
     topic:
       eventCreated: event.created
       eventCreatedImpaired: event.created.impair
+  outbox:
+    dispatch:
+      delay-ms: 1000

@@ -1,6 +1,8 @@
 package com.yuewie.apievent.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.util.Objects;
@@ -19,18 +21,23 @@ public class Adresse {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Size(max = 10, message = "{entity.adresse.numero.size}")
     @Column(name = "numero", length = 10)
     private String numero; // Ex: "10", "12 Bis"
 
+    @NotBlank(message = "{entity.adresse.rue.notblank}")
     @Column(name = "rue", nullable = false)
     private String rue;
 
+    @NotBlank(message = "{entity.adresse.codepostal.notblank}")
     @Column(name = "codePostal", nullable = false)
     private String codePostal;
 
+    @NotBlank(message = "{entity.adresse.ville.notblank}")
     @Column(name = "ville", nullable = false)
     private String ville;
 
+    @NotBlank(message = "{entity.adresse.pays.notblank}")
     @Column(name="pays", nullable = false)
     private String pays;
 

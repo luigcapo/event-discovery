@@ -230,7 +230,7 @@ class EventControllerTest {
             when(eventService.findAllEvent()).thenReturn(List.of(eventDto));
 
             // When & Then
-            mockMvc.perform(get("/api/v1/events/search")
+            mockMvc.perform(get("/api/v1/events/search/all")
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))

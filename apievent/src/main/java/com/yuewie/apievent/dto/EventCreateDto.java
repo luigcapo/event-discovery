@@ -1,6 +1,7 @@
 package com.yuewie.apievent.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -38,4 +39,13 @@ public class EventCreateDto {
     @NotEmpty(message = "{event.adresses.not.empty}")
     @Schema(description = "Liste des adresses initiales de l'événement")
     private Set<@Valid LienEventAdresseRequestDto> adresses;
+
+    @AssertTrue(message = "{event.date.period.invalid}")
+    @JsonIgnore
+    public boolean isDatePeriodValid() {
+        if (start == null || end == null) {
+            return true;
+        }
+        return end.isAfter(start);
+    }
 }

@@ -1,6 +1,9 @@
 package com.yuewie.apievent.service;
 
 import com.yuewie.apievent.dto.*;
+import com.yuewie.apievent.dto.constraint.EventFieldForOrderBy;
+import com.yuewie.apievent.dto.constraint.OrderDirection;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.Set;
@@ -31,4 +34,6 @@ public interface EventService {
     void removeAdresse(Long eventId, Long adresseId);
 
     Set<LienEventAdresseDto> getAdresseByEventId(Long eventId);
+
+    Page<EventDto> findEvents(int page, int size, EventFieldForOrderBy orderBy, OrderDirection direction);
 }

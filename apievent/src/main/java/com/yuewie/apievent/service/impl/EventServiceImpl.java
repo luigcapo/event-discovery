@@ -1,6 +1,8 @@
 package com.yuewie.apievent.service.impl;
 
 import com.yuewie.apievent.dto.*;
+import com.yuewie.apievent.dto.constraint.EventFieldForOrderBy;
+import com.yuewie.apievent.dto.constraint.OrderDirection;
 import com.yuewie.apievent.entity.Adresse;
 import com.yuewie.apievent.entity.Event;
 import com.yuewie.apievent.entity.LienEventAdresse;
@@ -37,6 +39,12 @@ import java.util.stream.Collectors;
 @Transactional
 @Loggable
 public class EventServiceImpl implements EventService {
+
+    // Message keys constants (Sonar S1192)
+    private static final String MSG_EVENT_NOT_FOUND = "event.not.found";
+    private static final String MSG_EVENT_DTO_NULL = "event.dto.null";
+    private static final String MSG_EVENT_UPDATE_DTO_NULL = "event.update.dto.null";
+    private static final String MSG_EVENT_ADRESSE_NOT_FOUND = "event.adresse.not.found";
 
     private final EventMapper eventMapper;
     private final EventRepository eventRepository;
@@ -124,7 +132,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventDto createEvent(EventCreateDto eventDto) {
-        Objects.requireNonNull(eventDto, messageHelper.get("event.dto.null"));
+        Objects.requireNonNull(eventDto, messageHelper.get(MSG_EVENT_DTO_NULL));
         Event event = eventMapper.toEntity(eventDto);
         Event createdEvent = eventRepository.save(event);
         return eventMapper.toDto(createdEvent);
@@ -139,9 +147,9 @@ public class EventServiceImpl implements EventService {
      */
     @Override
     public EventDto updateEvent(Long eventId, EventUpdateDto eventDto) {
-        Objects.requireNonNull(eventDto, messageHelper.get("event.dto.null"));
+        Objects.requireNonNull(eventDto, messageHelper.get(MSG_EVENT_DTO_NULL));
         Event eventExisted = eventRepository.findById(eventId)
-                .orElseThrow(() -> new EntityNotFoundException(messageHelper.get("event.not.found", eventId)));
+                .orElseThrow(() -> new EntityNotFoundException(messageHelper.get(MSG_EVENT_NOT_FOUND, eventId)));
         Event updated = eventMapper.toEntity(eventDto);
         updated.setId(eventId); // Assure qu'on veut faire une mise à jour de l'événement existant
         updated.setLiens(eventExisted.getLiens()); // Conserve les adresses existantes
@@ -157,9 +165,9 @@ public class EventServiceImpl implements EventService {
      */
     @Override
     public EventDto patchEvent(Long eventId, EventPatchDto eventPatchDto) {
-        Objects.requireNonNull(eventPatchDto, messageHelper.get("event.update.dto.null"));
+        Objects.requireNonNull(eventPatchDto, messageHelper.get(MSG_EVENT_UPDATE_DTO_NULL));
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new EntityNotFoundException(messageHelper.get("event.not.found", eventId)));
+                .orElseThrow(() -> new EntityNotFoundException(messageHelper.get(MSG_EVENT_NOT_FOUND, eventId)));
 
         eventMapper.updateEntityFromDto(eventPatchDto, event); // MapStruct applique uniquement les champs non-nuls
 
@@ -170,7 +178,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public void deleteEvent(Long eventId) {
         if (!eventRepository.existsById(eventId)) {
-            throw new EntityNotFoundException(messageHelper.get("event.not.found", eventId));
+            throw new EntityNotFoundException(messageHelper.get(MSG_EVENT_NOT_FOUND, eventId));
         }
         eventRepository.deleteById(eventId);
     }
@@ -178,7 +186,7 @@ public class EventServiceImpl implements EventService {
     @Transactional(readOnly = true)
     @Override
     public EventDto getEvent(Long id) {
-        return eventRepository.findById(id).map(eventMapper::toDto).orElseThrow(() -> new EntityNotFoundException(messageHelper.get("event.not.found", id)));
+        return eventRepository.findById(id).map(eventMapper::toDto).orElseThrow(() -> new EntityNotFoundException(messageHelper.get(MSG_EVENT_NOT_FOUND, id)));
     }
 
     @Override
@@ -215,7 +223,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventDto addAdresse(Long eventId, LienEventAdresseRequestDto dto) {
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new EntityNotFoundException(messageHelper.get("event.not.found", eventId)));
+                .orElseThrow(() -> new EntityNotFoundException(messageHelper.get(MSG_EVENT_NOT_FOUND, eventId)));
         LienEventAdresse lien = lienEventAdresseMapper.toEntity(dto);
         Adresse adresseEntrante = lien.getAdresse();
         if (adresseEntrante.getId() == null) {
@@ -232,7 +240,7 @@ public class EventServiceImpl implements EventService {
         }
         else {
             Adresse adresseExistante = adresseRepository.findById(adresseEntrante.getId())
-                    .orElseThrow(() -> new EntityNotFoundException(messageHelper.get("event.adresse.not.found", adresseEntrante.getId())));
+                    .orElseThrow(() -> new EntityNotFoundException(messageHelper.get(MSG_EVENT_ADRESSE_NOT_FOUND, adresseEntrante.getId())));
 
             lien.setAdresse(adresseExistante);
         }
@@ -243,7 +251,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public void removeAdresse(Long eventId, Long adresseId) {
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new EntityNotFoundException(messageHelper.get("event.not.found", eventId)));
+                .orElseThrow(() -> new EntityNotFoundException(messageHelper.get(MSG_EVENT_NOT_FOUND, eventId)));
         Adresse adresseProxy = adresseRepository.getReferenceById(adresseId);
         event.removeLien(adresseProxy);
         eventRepository.save(event);
@@ -252,9 +260,23 @@ public class EventServiceImpl implements EventService {
     @Override
     public Set<LienEventAdresseDto> getAdresseByEventId(Long eventId) {
         if(!eventRepository.existsById(eventId)){
-            throw new EntityNotFoundException(messageHelper.get("event.not.found", eventId));
+            throw new EntityNotFoundException(messageHelper.get(MSG_EVENT_NOT_FOUND, eventId));
         }
         return lienEventAdresseRepository.findByEventId(eventId).stream().map(lienEventAdresseMapper::toDto).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Page<EventDto> findEvents(int page, int size, EventFieldForOrderBy orderBy, OrderDirection direction) {
+        Sort sort = Sort.by(
+                Sort.Direction.fromString(direction.toString()),
+                orderBy.toString()
+        );
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return eventRepository
+                .findAll(pageable)
+                .map(eventMapper::toDto);
     }
 
 

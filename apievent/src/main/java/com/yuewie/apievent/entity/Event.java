@@ -1,6 +1,9 @@
 package com.yuewie.apievent.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -24,6 +27,8 @@ public class Event {
     @Column(name = "id")
     private Long id;
 
+    @NotBlank(message = "{entity.event.name.notblank}")
+    @Size(min = 3, max = 255, message = "{entity.event.name.size}")
     @Column(name = "name", nullable = false)
     private String name;
 
@@ -31,9 +36,11 @@ public class Event {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @NotNull(message = "{entity.event.start.notnull}")
     @Column(name = "start_date", nullable = false)
     private LocalDateTime start;
 
+    @NotNull(message = "{entity.event.end.notnull}")
     @Column(name = "end_date", nullable = false)
     private LocalDateTime end;
 

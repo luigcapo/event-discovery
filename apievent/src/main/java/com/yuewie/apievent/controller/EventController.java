@@ -1,6 +1,8 @@
 package com.yuewie.apievent.controller;
 
 import com.yuewie.apievent.dto.*;
+import com.yuewie.apievent.dto.constraint.EventFieldForOrderBy;
+import com.yuewie.apievent.dto.constraint.OrderDirection;
 import com.yuewie.apievent.exception.ApiError;
 import com.yuewie.apievent.service.EventService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -49,7 +52,7 @@ public class EventController {
         return ResponseEntity.ok(dto);
     }
 
-    @GetMapping("/search")
+    @GetMapping("/search/all")
     @Operation(summary = "Récupérer tous les événements",
             description = "Récupère une liste de tous les événements disponibles.")
     @ApiResponses(value = {
@@ -58,6 +61,22 @@ public class EventController {
     public ResponseEntity<List<EventDto>> getEvents() {
         List<EventDto> events = eventService.findAllEvent();
         return ResponseEntity.ok(events);      // 200
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Récupérer tous les événements",
+            description = "Récupère une liste de tous les événements disponibles.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Liste d'événements récupérée avec succès"),
+    })
+    public ResponseEntity<Page<EventDto>> getEventsPage(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") EventFieldForOrderBy orderBy,
+            @RequestParam(defaultValue = "ASC") OrderDirection direction
+    ) {
+        Page<EventDto> events = eventService.findEvents(page, size, orderBy, direction);
+        return ResponseEntity.ok(events);
     }
 
     @GetMapping("/search/spec")
@@ -275,4 +294,6 @@ public class EventController {
 
         eventService.removeAdresse(id, adresseId);
     }
+
+
 }

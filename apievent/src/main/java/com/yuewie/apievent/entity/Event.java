@@ -54,8 +54,6 @@ public class Event {
     }
 
     public void removeLien(Adresse adresse) {
-        // On cherche le lien qui pointe vers cette adresse et on le dégage
-        // C'est 100% sûr car on compare l'ID de l'adresse (fiable)
         this.liens.removeIf(lien -> lien.getAdresse().equals(adresse));
     }
 

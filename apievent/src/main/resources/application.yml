@@ -44,12 +44,6 @@ management:
 logging:
   file:
     path: ${APPLICATION_LOG_PATH:../logs/apievent}
-  level:
-      org.hibernate.SQL: INFO
-      org.hibernate.type.descriptor.sql.BasicBinder: ERROR
-      org.hibernate.type.descriptor.sql.BasicExtractor: ERROR
-      org.springdoc: INFO
-      level.io.opentelemetry.exporter.otlp: INFO
 api:
   error:
     include-debug-message: true

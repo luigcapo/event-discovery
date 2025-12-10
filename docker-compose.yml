@@ -6,7 +6,7 @@ services:
     image: confluentinc/cp-kafka:7.6.0
     container_name: kafka1
     hostname: kafka1
-    user: "0:0" # : Lance en tant que root
+    user: "0:0" 
     networks:
       - app-network
     ports:
@@ -31,7 +31,7 @@ services:
     image: confluentinc/cp-kafka:7.6.0
     container_name: kafka2
     hostname: kafka2
-    user: "0:0" # : Lance en tant que root
+    user: "0:0" 
     networks:
       - app-network
     ports:
@@ -44,9 +44,7 @@ services:
       KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka1:9093,2@kafka2:9093,3@kafka3:9093'
       CLUSTER_ID: 'aQs_wTRTQe-6TmXxxmIasw'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT'
-      # Note : Le container écoute toujours sur 9092 pour l'externe, c'est Docker qui mappe le port
       KAFKA_LISTENERS: 'INTERNAL://kafka2:29092,CONTROLLER://kafka2:9093,EXTERNAL://0.0.0.0:9092'
-      # Mais on annonce au client (IntelliJ) de taper sur 9093
       KAFKA_ADVERTISED_LISTENERS: 'INTERNAL://kafka2:29092,EXTERNAL://localhost:9093'
       KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
@@ -57,7 +55,7 @@ services:
     image: confluentinc/cp-kafka:7.6.0
     container_name: kafka3
     hostname: kafka3
-    user: "0:0" # : Lance en tant que root
+    user: "0:0" 
     networks:
       - app-network
     ports:
@@ -71,7 +69,6 @@ services:
       CLUSTER_ID: 'aQs_wTRTQe-6TmXxxmIasw'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT'
       KAFKA_LISTENERS: 'INTERNAL://kafka3:29092,CONTROLLER://kafka3:9093,EXTERNAL://0.0.0.0:9092'
-      # On annonce 9094 pour IntelliJ
       KAFKA_ADVERTISED_LISTENERS: 'INTERNAL://kafka3:29092,EXTERNAL://localhost:9094'
       KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'

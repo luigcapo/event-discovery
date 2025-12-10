@@ -42,13 +42,6 @@ public class Adresse {
     private String pays;
 
 
-//    Enlever car risque de pb de perf si par exemple 10000 event dans l'année pour une adresse. Si besoin faire une requete avec pagination
-//    @OneToMany(mappedBy = "adresse")
-//    @ToString.Exclude
-//    @EqualsAndHashCode.Exclude
-//    private Set<LienAdresseEvent> events = new HashSet<>();
-
-
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Adresse adresse)) return false;

@@ -23,7 +23,7 @@
     <!-- Appender JSON pour OpenTelemetry (pour les environnements déployés)-->
     <!-- ================================================================== -->
     <appender name="JSON_OTEL" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/logs/eventnotifications/app.json</file>
+        <file>${LOG_PATH}/app.json</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- Rotation quotidienne des fichiers de log -->
             <fileNamePattern>/logs/eventnotifications/app-log-%d{yyyy-MM-dd}.json.gz</fileNamePattern>

@@ -2,6 +2,8 @@ package com.yuewie.eventnotifications.consumer;
 
 import com.yuewie.eventnotifications.service.technique.kafka.DuplicateMessageChecker;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.lang.Nullable;
@@ -10,6 +12,8 @@ import java.util.Objects;
 
 @Slf4j
 public abstract class BaseKafkaConsumer<T> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseKafkaConsumer.class);
 
     private static final String ID_BUSINESS = "businessIdNotifications";
     private static final String ID_DELIVERY = "deliveryIdNotifications";
@@ -31,7 +35,7 @@ public abstract class BaseKafkaConsumer<T> {
             String businessId = buildBusinessId(payload);
             // Étape 1 : Vérification pré-traitement (logique commune)
             if (!shouldProcessMessage(payload, deliveryId, businessId)) {
-                log.warn("Message déjà traité ou invalide, il sera ignoré (offset: {}).", offset);
+                LOGGER.warn("Message déjà traité ou invalide, il sera ignoré (offset: {}).", offset);
                 ack.acknowledge(); // On acquitte pour ne pas le retraiter
                 return;
             }
@@ -43,7 +47,7 @@ public abstract class BaseKafkaConsumer<T> {
             finalizeAndAcknowledge(payload, ack, deliveryId, businessId);
 
         } catch (Exception e) {
-            log.error("Erreur critique durant le traitement du message (offset: {}). Le message ne sera pas acquitté.", offset, e);
+            LOGGER.error("Erreur critique durant le traitement du message (offset: {}). Le message ne sera pas acquitté.", offset, e);
             // On n'acquitte PAS en cas d'erreur pour permettre une nouvelle tentative
             // ou l'envoi vers une Dead Letter Topic (DLT).
         }
@@ -69,14 +73,14 @@ public abstract class BaseKafkaConsumer<T> {
     protected boolean shouldProcessMessage(T payload, String deliveryId, @Nullable String businessId) {
         // --- Niveau 1 : Vérification de l'Idempotence de Transport (Obligatoire) ---
         if (duplicateChecker.isAlreadyProcessed(ID_DELIVERY, deliveryId)) {
-            log.warn("Doublon de transport détecté. Le message a déjà été livré (clé: {}). Message ignoré.", deliveryId);
+            LOGGER.warn("Doublon de transport détecté. Le message a déjà été livré (clé: {}). Message ignoré.", deliveryId);
             return false;
         }
 
         // --- Niveau 2 : Vérification de l'Idempotence Métier (Optionnel) ---
         if (businessId != null) { // On ne fait la vérification que si une clé métier est fournie.
             if (duplicateChecker.isAlreadyProcessed(ID_BUSINESS, businessId)) {
-                log.warn("Doublon métier détecté. L'événement a déjà été traité (clé: {}). Message ignoré.", businessId);
+                LOGGER.warn("Doublon métier détecté. L'événement a déjà été traité (clé: {}). Message ignoré.", businessId);
                 return false;
             }
         }
@@ -93,7 +97,7 @@ public abstract class BaseKafkaConsumer<T> {
         if(!Objects.isNull(businessId)){
             duplicateChecker.ajouterAuSet(ID_BUSINESS, businessId);
         }
-        log.debug("Message finalisé et acquitté.");
+        LOGGER.debug("Message finalisé et acquitté.");
         ack.acknowledge();
     }
 

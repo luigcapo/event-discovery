@@ -3,6 +3,8 @@ package com.yuewie.eventnotifications.consumer;
 import com.yuewie.eventnotifications.dto.EventCreatedDto;
 import com.yuewie.eventnotifications.service.technique.kafka.DuplicateMessageChecker;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
@@ -14,6 +16,8 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class EventCreatedConsumer extends BaseKafkaConsumer<EventCreatedDto> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EventCreatedConsumer.class);
 
     public EventCreatedConsumer(DuplicateMessageChecker duplicateChecker) {
         super(duplicateChecker);
@@ -31,7 +35,7 @@ public class EventCreatedConsumer extends BaseKafkaConsumer<EventCreatedDto> {
 
     @Override
     protected void handlePayload(EventCreatedDto payload, int partition, long offset) {
-        log.info("Received message [{}] from group1, partition-{} with offset-{}",
+        LOGGER.info("Received message [{}] from group1, partition-{} with offset-{}",
                 payload,
                 partition,
                 offset);

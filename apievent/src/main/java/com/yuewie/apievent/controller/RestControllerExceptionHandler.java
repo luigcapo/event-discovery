@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class RestControllerExceptionHandler {
 
-    //souvent true dans dev et false en prod
+
     @Value("${api.error.include-debug-message:false}") // false par défaut
     private boolean includeDebugMessage;
 

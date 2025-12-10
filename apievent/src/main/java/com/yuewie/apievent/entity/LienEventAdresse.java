@@ -22,7 +22,7 @@ public class LienEventAdresse {
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("eventId") // Mappe la partie 'eventId' de la clé composite
     @JoinColumn(name = "event_id")
-    @ToString.Exclude //sinon on rapelera to string sur LienEventAdresse creant to string infini
+    @ToString.Exclude
     private Event event;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})

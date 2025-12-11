@@ -30,6 +30,8 @@ public class ApiLoggingAspect {
             return joinPoint.proceed();
         }
 
+        Logger logger = getTargetLogger(joinPoint);
+
         String methodName = signature.toShortString();
 
         if (loggableAnnotationOpt.get().logParams() && logger.isTraceEnabled()) {
@@ -71,5 +73,14 @@ public class ApiLoggingAspect {
         // Priorité n°2 : l'annotation sur la classe
         Class<?> targetClass = joinPoint.getTarget().getClass();
         return Optional.ofNullable(targetClass.getAnnotation(Loggable.class));
+    }
+
+    private Logger getTargetLogger(ProceedingJoinPoint joinPoint) {
+        Object target = joinPoint.getTarget();
+        Class<?> targetClass = (target != null)
+                ? target.getClass()
+                : ((MethodSignature) joinPoint.getSignature()).getDeclaringType(); // fallback
+
+        return LoggerFactory.getLogger(targetClass);
     }
 }
